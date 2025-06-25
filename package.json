@@ -14,6 +14,11 @@
     "db:seed:users": "bun run src/config/seed-simple.ts users",
     "db:seed:admin": "bun run src/config/seed-simple.ts admin",
     "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:unit": "bun test --testNamePattern='Unit'",
+    "test:integration": "bun test --testNamePattern='Integration'",
+    "test:api": "bun test --testNamePattern='API'",
+    "test:coverage": "bun test --coverage",
     "lint": "tsc --noEmit",
     "clean": "rm -rf dist node_modules/.cache"
   },
