@@ -27,8 +27,11 @@ describe("API: Students", () => {
       
       const data = await response.json() as any;
       expect(data.success).toBe(true);
-      expect(data.message).toBe("Students controller - create method");
-      // Note: Current implementation returns data: null (stub)
+      expect(data.data).toBeDefined();
+      expect(data.data.id).toBeDefined();
+      expect(data.data.full_name).toBe(studentData.full_name);
+      expect(data.data.email).toBe(studentData.email);
+      expect(data.message).toBe("Aluno criado com sucesso");
     });
 
     it("should reject creation without authentication", async () => {
@@ -73,7 +76,9 @@ describe("API: Students", () => {
       
       const data = await response.json() as any;
       expect(data.success).toBe(true);
-      expect(data.message).toBe("Students controller - create method");
+      expect(data.data).toBeDefined();
+      expect(data.data.id).toBeDefined();
+      expect(data.message).toBe("Aluno criado com sucesso");
     });
   });
 
@@ -87,7 +92,10 @@ describe("API: Students", () => {
       expect(data.success).toBe(true);
       expect(data.data).toBeDefined();
       expect(Array.isArray(data.data)).toBe(true);
-      expect(data.message).toBe("Students controller - getAll method");
+      expect(data.pagination).toBeDefined();
+      expect(data.pagination.page).toBeDefined();
+      expect(data.pagination.limit).toBeDefined();
+      expect(data.pagination.total).toBeDefined();
     });
 
     it("should reject listing without authentication", async () => {
@@ -108,31 +116,47 @@ describe("API: Students", () => {
       const data = await response.json() as any;
       expect(data.success).toBe(true);
       expect(data.data).toBeDefined();
+      expect(data.pagination.limit).toBe(5);
+      expect(data.pagination.page).toBe(1);
     });
   });
 
   describe("GET /api/students/:id", () => {
     it("should get student by ID", async () => {
-      const testId = "123e4567-e89b-42d3-a456-426614174000";
-      const response = await TestHelpers.makeAuthenticatedRequest(`/api/students/${testId}`);
+      // First create a student to test with
+      const studentData = TestHelpers.generateStudentData({
+        full_name: "Student for ID Test",
+        email: "idtest@example.com"
+      });
+
+      const createResponse = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData)
+      }, "admin");
+
+      const createData = await createResponse.json() as any;
+      const studentId = createData.data.id;
+
+      const response = await TestHelpers.makeAuthenticatedRequest(`/api/students/${studentId}`);
 
       expect(response.status).toBe(200);
       
       const data = await response.json() as any;
       expect(data.success).toBe(true);
-      expect(data.message).toContain(testId);
-      // Note: Current implementation returns data: null (stub)
+      expect(data.data).toBeDefined();
+      expect(data.data.id).toBe(studentId);
+      expect(data.data.full_name).toBe(studentData.full_name);
     });
 
     it("should handle non-existent student ID", async () => {
       const fakeId = "123e4567-e89b-42d3-a456-426614174000";
       const response = await TestHelpers.makeAuthenticatedRequest(`/api/students/${fakeId}`);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(404);
       
       const data = await response.json() as any;
-      expect(data.success).toBe(true);
-      // Note: Current stub implementation doesn't validate existence
+      expect(data.success).toBe(false);
+      expect(data.error).toBe("Aluno não encontrado");
     });
 
     it("should handle invalid UUID format", async () => {
@@ -148,13 +172,26 @@ describe("API: Students", () => {
 
   describe("PUT /api/students/:id", () => {
     it("should update student with admin role", async () => {
-      const testId = "123e4567-e89b-42d3-a456-426614174000";
+      // First create a student to test with
+      const studentData = TestHelpers.generateStudentData({
+        full_name: "Student for Update Test",
+        email: "updatetest@example.com"
+      });
+
+      const createResponse = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData)
+      }, "admin");
+
+      const createData = await createResponse.json() as any;
+      const studentId = createData.data.id;
+
       const updateData = {
         full_name: "Updated Student Name",
         email: "updated@email.com"
       };
 
-      const response = await TestHelpers.makeAuthenticatedRequest(`/api/students/${testId}`, {
+      const response = await TestHelpers.makeAuthenticatedRequest(`/api/students/${studentId}`, {
         method: "PUT",
         body: JSON.stringify(updateData)
       }, "admin");
@@ -163,7 +200,10 @@ describe("API: Students", () => {
       
       const data = await response.json() as any;
       expect(data.success).toBe(true);
-      expect(data.message).toContain(testId);
+      expect(data.data).toBeDefined();
+      expect(data.data.full_name).toBe(updateData.full_name);
+      expect(data.data.email).toBe(updateData.email);
+      expect(data.message).toBe("Aluno atualizado com sucesso");
     });
 
     it("should reject update with teacher role", async () => {
@@ -185,9 +225,21 @@ describe("API: Students", () => {
 
   describe("DELETE /api/students/:id", () => {
     it("should delete student with admin role", async () => {
-      const testId = "123e4567-e89b-42d3-a456-426614174000";
+      // First create a student to test with
+      const studentData = TestHelpers.generateStudentData({
+        full_name: "Student for Delete Test",
+        email: "deletetest@example.com"
+      });
 
-      const response = await TestHelpers.makeAuthenticatedRequest(`/api/students/${testId}`, {
+      const createResponse = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData)
+      }, "admin");
+
+      const createData = await createResponse.json() as any;
+      const studentId = createData.data.id;
+
+      const response = await TestHelpers.makeAuthenticatedRequest(`/api/students/${studentId}`, {
         method: "DELETE"
       }, "admin");
 
@@ -195,7 +247,11 @@ describe("API: Students", () => {
       
       const data = await response.json() as any;
       expect(data.success).toBe(true);
-      expect(data.message).toContain(testId);
+      expect(data.message).toBe("Aluno removido com sucesso");
+
+      // Verify student was deleted
+      const getResponse = await TestHelpers.makeAuthenticatedRequest(`/api/students/${studentId}`);
+      expect(getResponse.status).toBe(404);
     });
 
     it("should reject deletion with non-admin role", async () => {
@@ -203,7 +259,7 @@ describe("API: Students", () => {
 
       const response = await TestHelpers.makeAuthenticatedRequest(`/api/students/${testId}`, {
         method: "DELETE"
-      }, "receptionist");
+      }, "teacher");
 
       expect(response.status).toBe(403);
       

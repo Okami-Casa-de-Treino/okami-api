@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
-import { dbManager } from "../config/database.js";
+import { prisma } from "../config/prisma.js";
 import { AuthMiddleware } from "../middleware/auth.js";
 import { loginSchema } from "../utils/validation.js";
-import type { User, AuthResponse, ApiResponse } from "../types/index.js";
+import type { AuthResponse } from "../types/index.js";
 
 export class AuthController {
   async login(request: Request): Promise<Response> {
@@ -26,71 +26,84 @@ export class AuthController {
       }
 
       const { username, password } = validation.data;
-      const client = await dbManager.getClient();
 
-      try {
-        // Find user by username
-        const userResult = await client.query(
-          "SELECT * FROM users WHERE username = $1 AND status = 'active'",
-          [username]
-        );
-
-        if (userResult.rows.length === 0) {
-          return new Response(
-            JSON.stringify({
-              success: false,
-              error: "Credenciais inválidas"
-            }),
-            { 
-              status: 401, 
-              headers: { "Content-Type": "application/json" } 
+      // Find user by username using Prisma
+      const user = await prisma.user.findFirst({
+        where: {
+          username,
+          status: 'active'
+        },
+        include: {
+          teacher: {
+            select: {
+              id: true,
+              full_name: true,
+              email: true,
+              phone: true
             }
-          );
+          }
         }
+      });
 
-        const user = userResult.rows[0] as User;
-
-        // Verify password
-        const isValidPassword = await bcrypt.compare(password, user.password_hash);
-        if (!isValidPassword) {
-          return new Response(
-            JSON.stringify({
-              success: false,
-              error: "Credenciais inválidas"
-            }),
-            { 
-              status: 401, 
-              headers: { "Content-Type": "application/json" } 
-            }
-          );
-        }
-
-        // Generate JWT token
-        const userWithoutPassword = { ...user };
-        delete (userWithoutPassword as any).password_hash;
-        
-        const token = AuthMiddleware.generateToken(userWithoutPassword);
-
-        const response: AuthResponse = {
-          token,
-          user: userWithoutPassword
-        };
-
+      if (!user) {
         return new Response(
           JSON.stringify({
-            success: true,
-            data: response,
-            message: "Login realizado com sucesso"
+            success: false,
+            error: "Credenciais inválidas"
           }),
           { 
-            status: 200, 
+            status: 401, 
             headers: { "Content-Type": "application/json" } 
           }
         );
-
-      } finally {
-        client.release();
       }
+
+      // Verify password
+      const isValidPassword = await bcrypt.compare(password, user.password_hash);
+      if (!isValidPassword) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Credenciais inválidas"
+          }),
+          { 
+            status: 401, 
+            headers: { "Content-Type": "application/json" } 
+          }
+        );
+      }
+
+      // Generate JWT token
+      const userWithoutPassword = { 
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        teacher_id: user.teacher_id,
+        status: user.status,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        teacher: user.teacher
+      };
+        
+      const token = AuthMiddleware.generateToken(userWithoutPassword);
+
+      const response: AuthResponse = {
+        token,
+        user: userWithoutPassword
+      };
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: response,
+          message: "Login realizado com sucesso"
+        }),
+        { 
+          status: 200, 
+          headers: { "Content-Type": "application/json" } 
+        }
+      );
 
     } catch (error) {
       console.error("Login error:", error);
@@ -156,56 +169,55 @@ export class AuthController {
 
   async getProfile(request: Request, user: any): Promise<Response> {
     try {
-      const client = await dbManager.getClient();
-
-      try {
-        // Get fresh user data from database
-        const userResult = await client.query(
-          "SELECT id, username, email, role, teacher_id, status, created_at, updated_at FROM users WHERE id = $1",
-          [user.id]
-        );
-
-        if (userResult.rows.length === 0) {
-          return new Response(
-            JSON.stringify({
-              success: false,
-              error: "Usuário não encontrado"
-            }),
-            { 
-              status: 404, 
-              headers: { "Content-Type": "application/json" } 
+      // Get fresh user data from database using Prisma
+      const userData = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          role: true,
+          teacher_id: true,
+          status: true,
+          created_at: true,
+          updated_at: true,
+          teacher: {
+            select: {
+              id: true,
+              full_name: true,
+              email: true,
+              phone: true,
+              belt: true,
+              belt_degree: true,
+              specialties: true
             }
-          );
-        }
-
-        const userData = userResult.rows[0];
-
-        // If user is a teacher, get teacher info
-        if (userData.teacher_id) {
-          const teacherResult = await client.query(
-            "SELECT full_name, email, phone FROM teachers WHERE id = $1",
-            [userData.teacher_id]
-          );
-
-          if (teacherResult.rows.length > 0) {
-            userData.teacher_info = teacherResult.rows[0];
           }
         }
+      });
 
+      if (!userData) {
         return new Response(
           JSON.stringify({
-            success: true,
-            data: userData
+            success: false,
+            error: "Usuário não encontrado"
           }),
           { 
-            status: 200, 
+            status: 404, 
             headers: { "Content-Type": "application/json" } 
           }
         );
-
-      } finally {
-        client.release();
       }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: userData
+        }),
+        { 
+          status: 200, 
+          headers: { "Content-Type": "application/json" } 
+        }
+      );
 
     } catch (error) {
       console.error("Get profile error:", error);

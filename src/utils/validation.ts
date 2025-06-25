@@ -4,12 +4,12 @@ import { z } from "zod";
 export const createStudentSchema = z.object({
   full_name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD"),
-  cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF deve estar no formato XXX.XXX.XXX-XX").optional(),
+  cpf: z.string().regex(/^\d{11}$/, "CPF deve conter apenas 11 dígitos").optional(),
   rg: z.string().optional(),
   belt: z.string().optional(),
   belt_degree: z.number().int().min(1).max(10).optional(),
   address: z.string().optional(),
-  phone: z.string().regex(/^\(\d{2}\)\s\d{4,5}-\d{4}$/, "Telefone deve estar no formato (XX) XXXXX-XXXX").optional(),
+  phone: z.string().regex(/^\d{10,11}$/, "Telefone deve conter apenas dígitos (10 ou 11 dígitos)").optional(),
   email: z.string().email("Email inválido").optional(),
   emergency_contact_name: z.string().optional(),
   emergency_contact_phone: z.string().optional(),
@@ -24,8 +24,8 @@ export const updateStudentSchema = createStudentSchema.partial();
 export const createTeacherSchema = z.object({
   full_name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
-  cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF deve estar no formato XXX.XXX.XXX-XX").optional(),
-  phone: z.string().regex(/^\(\d{2}\)\s\d{4,5}-\d{4}$/, "Telefone deve estar no formato (XX) XXXXX-XXXX").optional(),
+  cpf: z.string().regex(/^\d{11}$/, "CPF deve conter apenas 11 dígitos").optional(),
+  phone: z.string().regex(/^\d{10,11}$/, "Telefone deve conter apenas dígitos (10 ou 11 dígitos)").optional(),
   email: z.string().email("Email inválido").optional(),
   belt: z.string().optional(),
   belt_degree: z.number().int().min(1).max(10).optional(),
@@ -112,7 +112,8 @@ export function validateUUID(id: string): boolean {
   return uuidRegex.test(id);
 }
 
-export function validateCPF(cpf: string): boolean {
+export function validateCPF(cpf: string | undefined): boolean {
+  if (!cpf) return false;
   // Remove formatting
   const cleanCPF = cpf.replace(/[^\d]/g, '');
   
@@ -141,13 +142,13 @@ export function validateCPF(cpf: string): boolean {
   return digit2 === parseInt(cleanCPF[10]);
 }
 
-export function formatCPF(cpf: string): string {
+export function formatCPF(cpf: string | undefined): string {
   if (!cpf) return '';
   const cleanCPF = cpf.replace(/[^\d]/g, '');
   return cleanCPF.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 }
 
-export function formatPhone(phone: string): string {
+export function formatPhone(phone: string | undefined): string {
   if (!phone) return '';
   const cleanPhone = phone.replace(/[^\d]/g, '');
   if (cleanPhone.length === 11) {
@@ -156,4 +157,14 @@ export function formatPhone(phone: string): string {
     return cleanPhone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
   }
   return phone;
+}
+
+export function cleanPhone(phone: string): string {
+  if (!phone) return '';
+  return phone.replace(/[^\d]/g, '');
+}
+
+export function cleanCPF(cpf: string): string {
+  if (!cpf) return '';
+  return cpf.replace(/[^\d]/g, '');
 } 

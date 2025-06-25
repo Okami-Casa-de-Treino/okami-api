@@ -1,0 +1,215 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id                             String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  full_name                      String          @db.VarChar(255)
+  birth_date                     DateTime        @db.Date
+  cpf                            String?         @unique @db.VarChar(14)
+  rg                             String?         @db.VarChar(20)
+  belt                           String?         @db.VarChar(50)
+  belt_degree                    Int?            @default(1)
+  address                        String?
+  phone                          String?         @db.VarChar(20)
+  email                          String?         @db.VarChar(255)
+  emergency_contact_name         String?         @db.VarChar(255)
+  emergency_contact_phone        String?         @db.VarChar(20)
+  emergency_contact_relationship String?         @db.VarChar(100)
+  medical_observations           String?
+  photo_url                      String?         @db.VarChar(500)
+  enrollment_date                DateTime?       @default(dbgenerated("CURRENT_DATE")) @db.Date
+  monthly_fee                    Decimal?        @db.Decimal(10, 2)
+  status                         student_status? @default(active)
+  created_at                     DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at                     DateTime?       @default(now()) @updatedAt @db.Timestamp(6)
+  checkins                       Checkin[]
+  payments                       Payment[]
+  student_classes                StudentClass[]
+
+  @@index([cpf], map: "idx_students_cpf")
+  @@index([enrollment_date], map: "idx_students_enrollment_date")
+  @@index([status], map: "idx_students_status")
+  @@map("students")
+}
+
+model Teacher {
+  id          String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  full_name   String          @db.VarChar(255)
+  birth_date  DateTime?       @db.Date
+  cpf         String?         @unique @db.VarChar(14)
+  phone       String?         @db.VarChar(20)
+  email       String?         @db.VarChar(255)
+  belt        String?         @db.VarChar(50)
+  belt_degree Int?
+  specialties Json?
+  hourly_rate Decimal?        @db.Decimal(10, 2)
+  status      teacher_status? @default(active)
+  created_at  DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at  DateTime?       @default(now()) @updatedAt @db.Timestamp(6)
+  classes     Class[]
+  users       User[]
+
+  @@index([cpf], map: "idx_teachers_cpf")
+  @@index([status], map: "idx_teachers_status")
+  @@map("teachers")
+}
+
+model Class {
+  id               String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String         @db.VarChar(255)
+  description      String?
+  teacher_id       String?        @db.Uuid
+  day_of_week      Int?
+  start_time       DateTime?      @db.Time(6)
+  end_time         DateTime?      @db.Time(6)
+  max_students     Int?           @default(30)
+  belt_requirement String?        @db.VarChar(50)
+  age_group        String?        @db.VarChar(50)
+  status           class_status?  @default(active)
+  created_at       DateTime?      @default(now()) @db.Timestamp(6)
+  updated_at       DateTime?      @default(now()) @updatedAt @db.Timestamp(6)
+  checkins         Checkin[]
+  teacher          Teacher?       @relation(fields: [teacher_id], references: [id], onUpdate: NoAction)
+  student_classes  StudentClass[]
+
+  @@index([day_of_week], map: "idx_classes_day_of_week")
+  @@index([status], map: "idx_classes_status")
+  @@index([teacher_id], map: "idx_classes_teacher_id")
+  @@map("classes")
+}
+
+model StudentClass {
+  id              String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  student_id      String                @db.Uuid
+  class_id        String                @db.Uuid
+  enrollment_date DateTime?             @default(dbgenerated("CURRENT_DATE")) @db.Date
+  status          student_class_status? @default(active)
+  created_at      DateTime?             @default(now()) @db.Timestamp(6)
+  class           Class                 @relation(fields: [class_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  student         Student               @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([student_id, class_id])
+  @@index([class_id], map: "idx_student_classes_class_id")
+  @@index([status], map: "idx_student_classes_status")
+  @@index([student_id], map: "idx_student_classes_student_id")
+  @@map("student_classes")
+}
+
+model Checkin {
+  id           String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  student_id   String          @db.Uuid
+  class_id     String?         @db.Uuid
+  checkin_date DateTime?       @default(dbgenerated("CURRENT_DATE")) @db.Date
+  checkin_time DateTime?       @default(now()) @db.Timestamp(6)
+  method       checkin_method? @default(manual)
+  notes        String?
+  created_at   DateTime?       @default(now()) @db.Timestamp(6)
+  class        Class?          @relation(fields: [class_id], references: [id], onUpdate: NoAction)
+  student      Student         @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([class_id], map: "idx_checkins_class_id")
+  @@index([checkin_date], map: "idx_checkins_date")
+  @@index([student_id], map: "idx_checkins_student_id")
+  @@map("checkins")
+}
+
+model Payment {
+  id              String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  student_id      String          @db.Uuid
+  amount          Decimal         @db.Decimal(10, 2)
+  due_date        DateTime        @db.Date
+  payment_date    DateTime?       @db.Date
+  payment_method  payment_method?
+  status          payment_status? @default(pending)
+  reference_month DateTime?       @db.Date
+  discount        Decimal?        @default(0) @db.Decimal(10, 2)
+  late_fee        Decimal?        @default(0) @db.Decimal(10, 2)
+  notes           String?
+  created_at      DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?       @default(now()) @updatedAt @db.Timestamp(6)
+  student         Student         @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([due_date], map: "idx_payments_due_date")
+  @@index([reference_month], map: "idx_payments_reference_month")
+  @@index([status], map: "idx_payments_status")
+  @@index([student_id], map: "idx_payments_student_id")
+  @@map("payments")
+}
+
+model User {
+  id            String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  username      String       @unique @db.VarChar(100)
+  email         String?      @unique @db.VarChar(255)
+  password_hash String       @db.VarChar(255)
+  role          user_role?   @default(receptionist)
+  teacher_id    String?      @db.Uuid
+  status        user_status? @default(active)
+  created_at    DateTime?    @default(now()) @db.Timestamp(6)
+  updated_at    DateTime?    @default(now()) @updatedAt @db.Timestamp(6)
+  teacher       Teacher?     @relation(fields: [teacher_id], references: [id], onUpdate: NoAction)
+
+  @@index([role], map: "idx_users_role")
+  @@index([status], map: "idx_users_status")
+  @@index([username], map: "idx_users_username")
+  @@map("users")
+}
+
+enum checkin_method {
+  manual
+  qr_code
+  app
+}
+
+enum class_status {
+  active
+  inactive
+}
+
+enum payment_method {
+  cash
+  card
+  pix
+  bank_transfer
+}
+
+enum payment_status {
+  pending
+  paid
+  overdue
+  cancelled
+}
+
+enum student_class_status {
+  active
+  inactive
+}
+
+enum student_status {
+  active
+  inactive
+  suspended
+}
+
+enum teacher_status {
+  active
+  inactive
+}
+
+enum user_role {
+  admin
+  teacher
+  receptionist
+}
+
+enum user_status {
+  active
+  inactive
+}

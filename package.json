@@ -20,7 +20,13 @@
     "test:api": "bun test --testNamePattern='API'",
     "test:coverage": "bun test --coverage",
     "lint": "tsc --noEmit",
-    "clean": "rm -rf dist node_modules/.cache"
+    "clean": "rm -rf dist node_modules/.cache",
+    "db:generate": "bunx prisma generate",
+    "db:push": "bunx prisma db push",
+    "db:pull": "bunx prisma db pull",
+    "db:migrate": "bunx prisma migrate dev",
+    "db:studio": "bunx prisma studio",
+    "db:reset": "bunx prisma migrate reset"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
@@ -32,6 +38,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@prisma/client": "^6.10.1",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.15.4",
     "@types/swagger-jsdoc": "^6.0.4",
@@ -40,6 +47,7 @@
     "cors": "^2.8.5",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.2",
+    "prisma": "^6.10.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.0",

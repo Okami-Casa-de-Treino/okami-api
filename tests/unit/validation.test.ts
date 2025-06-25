@@ -25,8 +25,8 @@ describe("Unit: Validation Schemas", () => {
       const validData = {
         full_name: "João Silva",
         birth_date: "1990-01-15",
-        cpf: "123.456.789-01",
-        phone: "(11) 99999-9999",
+        cpf: "12345678901",
+        phone: "11999999999",
         email: "joao@email.com"
       };
 
@@ -64,13 +64,13 @@ describe("Unit: Validation Schemas", () => {
       const invalidData = {
         full_name: "João Silva",
         birth_date: "1990-01-15",
-        cpf: "12345678901"
+        cpf: "123.456.789-01"
       };
 
       const result = createStudentSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain("XXX.XXX.XXX-XX");
+        expect(result.error.issues[0].message).toContain("apenas 11 dígitos");
       }
     });
 
@@ -78,13 +78,13 @@ describe("Unit: Validation Schemas", () => {
       const invalidData = {
         full_name: "João Silva",
         birth_date: "1990-01-15",
-        phone: "11999999999"
+        phone: "(11) 99999-9999"
       };
 
       const result = createStudentSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain("(XX) XXXXX-XXXX");
+        expect(result.error.issues[0].message).toContain("apenas dígitos");
       }
     });
 
@@ -118,7 +118,7 @@ describe("Unit: Validation Schemas", () => {
       const validData = {
         full_name: "Carlos Instrutor",
         email: "carlos@email.com",
-        phone: "(11) 88888-8888",
+        phone: "11888888888",
         belt: "Preta",
         belt_degree: 3,
         hourly_rate: 50.00
