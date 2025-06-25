@@ -183,7 +183,7 @@ INSERT INTO users (username, email, password_hash, role, status)
 VALUES (
     'admin', 
     'admin@okami.gym', 
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj3bp.Dg5Kv2', 
+    '$2b$12$hOCzXM.rC04V8AM84vNGleyoI0ERcpjeNILFamttAmbLTF2yA1yxW', 
     'admin', 
     'active'
 ) ON CONFLICT (username) DO NOTHING;
@@ -194,7 +194,7 @@ INSERT INTO users (username, email, password_hash, role, status)
 VALUES (
     'receptionist',
     'receptionist@okami.gym',
-    '$2a$12$8Nv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj3bp.Dg5Kv2',
+    '$2b$12$3z0YiHOdj/OX9GHmCcqfC.3A3amThGB1SlRQngKnHoJjtYQmcab/y',
     'receptionist',
     'active'
 ) ON CONFLICT (username) DO NOTHING; 

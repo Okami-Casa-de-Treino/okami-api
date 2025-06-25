@@ -8,11 +8,12 @@ services:
       POSTGRES_DB: okami_gym
       POSTGRES_USER: okami_user
       POSTGRES_PASSWORD: okami_password
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     networks:
       - okami-network
     healthcheck:
@@ -20,6 +21,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   api:
     build:
@@ -39,10 +41,12 @@ services:
     networks:
       - okami-network
     volumes:
-      - ./src:/app/src
-      - ./package.json:/app/package.json
-      - ./tsconfig.json:/app/tsconfig.json
-    command: bun --hot src/index.ts
+      - ./src:/app/src:ro
+      - ./package.json:/app/package.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./prisma:/app/prisma:ro
+    command: sh -c "sleep 10 && bun run db:seed:users && bun --hot src/index.ts"
+    restart: unless-stopped
 
   adminer:
     image: adminer
@@ -53,9 +57,11 @@ services:
       - okami-network
     depends_on:
       - postgres
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+    driver: local
 
 networks:
   okami-network:
