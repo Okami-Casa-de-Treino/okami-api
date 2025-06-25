@@ -1,0 +1,40 @@
+{
+  "name": "okami-api",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --hot src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build src/index.ts --outdir ./dist --target bun",
+    "docker:dev": "docker-compose up --build",
+    "docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build",
+    "db:setup": "docker-compose up postgres -d",
+    "test": "bun test",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules/.cache"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/bun": "latest",
+    "@types/cors": "^2.8.19",
+    "@types/uuid": "^10.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/pg": "^8.15.4",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.1.0",
+    "zod": "^3.25.67"
+  }
+}

@@ -1,0 +1,660 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2024-01-15T00:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "wrk_okami_api",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "Okami Gym API",
+      "description": "Complete Gym Management System API Testing Collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_okami_api",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:3000",
+        "token": "",
+        "student_id": "",
+        "teacher_id": "",
+        "class_id": "",
+        "payment_id": "",
+        "checkin_id": ""
+      },
+      "dataPropertyOrder": {
+        "&": ["base_url", "token", "student_id", "teacher_id", "class_id", "payment_id", "checkin_id"]
+      }
+    },
+    {
+      "_id": "fld_health",
+      "_type": "request_group",
+      "parentId": "wrk_okami_api",
+      "name": "🏥 Health Check"
+    },
+    {
+      "_id": "req_health",
+      "_type": "request",
+      "parentId": "fld_health",
+      "name": "Health Check",
+      "url": "{{ _.base_url }}/health",
+      "method": "GET"
+    },
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_okami_api",
+      "name": "🔐 Authentication"
+    },
+    {
+      "_id": "req_login",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Login",
+      "url": "{{ _.base_url }}/api/auth/login",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"}
+      ]
+    },
+    {
+      "_id": "req_profile",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Get Profile",
+      "url": "{{ _.base_url }}/api/auth/profile",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_refresh",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Refresh Token",
+      "url": "{{ _.base_url }}/api/auth/refresh",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"refreshToken\": \"your_refresh_token_here\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"}
+      ]
+    },
+    {
+      "_id": "req_logout",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Logout",
+      "url": "{{ _.base_url }}/api/auth/logout",
+      "method": "POST",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "fld_students",
+      "_type": "request_group",
+      "parentId": "wrk_okami_api",
+      "name": "👥 Students"
+    },
+    {
+      "_id": "req_students_list",
+      "_type": "request",
+      "parentId": "fld_students",
+      "name": "List Students",
+      "url": "{{ _.base_url }}/api/students",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_students_create",
+      "_type": "request",
+      "parentId": "fld_students",
+      "name": "Create Student",
+      "url": "{{ _.base_url }}/api/students",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"João Silva\",\n  \"email\": \"joao@email.com\",\n  \"phone\": \"11999999999\",\n  \"cpf\": \"12345678901\",\n  \"birth_date\": \"1990-01-15\",\n  \"address\": \"Rua das Flores, 123\",\n  \"emergency_contact\": \"Maria Silva - 11888888888\",\n  \"medical_conditions\": \"Nenhuma\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_students_get",
+      "_type": "request",
+      "parentId": "fld_students",
+      "name": "Get Student by ID",
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_students_update",
+      "_type": "request",
+      "parentId": "fld_students",
+      "name": "Update Student",
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"João Silva Santos\",\n  \"email\": \"joao.santos@email.com\",\n  \"phone\": \"11999999999\",\n  \"address\": \"Rua das Flores, 456\",\n  \"emergency_contact\": \"Maria Silva - 11888888888\",\n  \"medical_conditions\": \"Hipertensão controlada\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_students_delete",
+      "_type": "request",
+      "parentId": "fld_students",
+      "name": "Delete Student",
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}",
+      "method": "DELETE",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_students_classes",
+      "_type": "request",
+      "parentId": "fld_students",
+      "name": "Get Student Classes",
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}/classes",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_students_enroll",
+      "_type": "request",
+      "parentId": "fld_students",
+      "name": "Enroll in Class",
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}/classes",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"class_id\": \"{{ _.class_id }}\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_students_unenroll",
+      "_type": "request",
+      "parentId": "fld_students",
+      "name": "Unenroll from Class",
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}/classes/{{ _.class_id }}",
+      "method": "DELETE",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "fld_teachers",
+      "_type": "request_group",
+      "parentId": "wrk_okami_api",
+      "name": "👨‍🏫 Teachers"
+    },
+    {
+      "_id": "req_teachers_list",
+      "_type": "request",
+      "parentId": "fld_teachers",
+      "name": "List Teachers",
+      "url": "{{ _.base_url }}/api/teachers",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_teachers_create",
+      "_type": "request",
+      "parentId": "fld_teachers",
+      "name": "Create Teacher",
+      "url": "{{ _.base_url }}/api/teachers",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Carlos Instrutor\",\n  \"email\": \"carlos@email.com\",\n  \"phone\": \"11888888888\",\n  \"specialization\": \"Musculação\",\n  \"hire_date\": \"2024-01-01\",\n  \"salary\": 3000.00\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_teachers_get",
+      "_type": "request",
+      "parentId": "fld_teachers",
+      "name": "Get Teacher by ID",
+      "url": "{{ _.base_url }}/api/teachers/{{ _.teacher_id }}",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_teachers_update",
+      "_type": "request",
+      "parentId": "fld_teachers",
+      "name": "Update Teacher",
+      "url": "{{ _.base_url }}/api/teachers/{{ _.teacher_id }}",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Carlos Instrutor Senior\",\n  \"email\": \"carlos.senior@email.com\",\n  \"phone\": \"11888888888\",\n  \"specialization\": \"Musculação e Funcional\",\n  \"salary\": 3500.00\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_teachers_delete",
+      "_type": "request",
+      "parentId": "fld_teachers",
+      "name": "Delete Teacher",
+      "url": "{{ _.base_url }}/api/teachers/{{ _.teacher_id }}",
+      "method": "DELETE",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_teachers_classes",
+      "_type": "request",
+      "parentId": "fld_teachers",
+      "name": "Get Teacher Classes",
+      "url": "{{ _.base_url }}/api/teachers/{{ _.teacher_id }}/classes",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "fld_classes",
+      "_type": "request_group",
+      "parentId": "wrk_okami_api",
+      "name": "🏃‍♂️ Classes"
+    },
+    {
+      "_id": "req_classes_list",
+      "_type": "request",
+      "parentId": "fld_classes",
+      "name": "List Classes",
+      "url": "{{ _.base_url }}/api/classes",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_classes_create",
+      "_type": "request",
+      "parentId": "fld_classes",
+      "name": "Create Class",
+      "url": "{{ _.base_url }}/api/classes",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Musculação Manhã\",\n  \"description\": \"Treino de musculação para iniciantes\",\n  \"teacher_id\": \"{{ _.teacher_id }}\",\n  \"schedule\": \"Segunda a Sexta - 08:00\",\n  \"duration\": 60,\n  \"capacity\": 15,\n  \"price\": 150.00\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_classes_get",
+      "_type": "request",
+      "parentId": "fld_classes",
+      "name": "Get Class by ID",
+      "url": "{{ _.base_url }}/api/classes/{{ _.class_id }}",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_classes_update",
+      "_type": "request",
+      "parentId": "fld_classes",
+      "name": "Update Class",
+      "url": "{{ _.base_url }}/api/classes/{{ _.class_id }}",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Musculação Manhã Avançado\",\n  \"description\": \"Treino de musculação para intermediários e avançados\",\n  \"schedule\": \"Segunda a Sexta - 08:00\",\n  \"duration\": 90,\n  \"capacity\": 12,\n  \"price\": 180.00\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_classes_delete",
+      "_type": "request",
+      "parentId": "fld_classes",
+      "name": "Delete Class",
+      "url": "{{ _.base_url }}/api/classes/{{ _.class_id }}",
+      "method": "DELETE",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_classes_schedule",
+      "_type": "request",
+      "parentId": "fld_classes",
+      "name": "Get Schedule",
+      "url": "{{ _.base_url }}/api/classes/schedule",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_classes_students",
+      "_type": "request",
+      "parentId": "fld_classes",
+      "name": "Get Class Students",
+      "url": "{{ _.base_url }}/api/classes/{{ _.class_id }}/students",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "fld_checkins",
+      "_type": "request_group",
+      "parentId": "wrk_okami_api",
+      "name": "✅ Check-ins"
+    },
+    {
+      "_id": "req_checkins_list",
+      "_type": "request",
+      "parentId": "fld_checkins",
+      "name": "List Check-ins",
+      "url": "{{ _.base_url }}/api/checkins",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_checkins_create",
+      "_type": "request",
+      "parentId": "fld_checkins",
+      "name": "Create Check-in",
+      "url": "{{ _.base_url }}/api/checkins",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"student_id\": \"{{ _.student_id }}\",\n  \"class_id\": \"{{ _.class_id }}\",\n  \"type\": \"manual\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_checkins_today",
+      "_type": "request",
+      "parentId": "fld_checkins",
+      "name": "Today's Check-ins",
+      "url": "{{ _.base_url }}/api/checkins/today",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_checkins_by_student",
+      "_type": "request",
+      "parentId": "fld_checkins",
+      "name": "Check-ins by Student",
+      "url": "{{ _.base_url }}/api/checkins/student/{{ _.student_id }}",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_checkins_by_class",
+      "_type": "request",
+      "parentId": "fld_checkins",
+      "name": "Check-ins by Class",
+      "url": "{{ _.base_url }}/api/checkins/class/{{ _.class_id }}",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_checkins_delete",
+      "_type": "request",
+      "parentId": "fld_checkins",
+      "name": "Delete Check-in",
+      "url": "{{ _.base_url }}/api/checkins/{{ _.checkin_id }}",
+      "method": "DELETE",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "fld_payments",
+      "_type": "request_group",
+      "parentId": "wrk_okami_api",
+      "name": "💰 Payments"
+    },
+    {
+      "_id": "req_payments_list",
+      "_type": "request",
+      "parentId": "fld_payments",
+      "name": "List Payments",
+      "url": "{{ _.base_url }}/api/payments",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_payments_create",
+      "_type": "request",
+      "parentId": "fld_payments",
+      "name": "Create Payment",
+      "url": "{{ _.base_url }}/api/payments",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"student_id\": \"{{ _.student_id }}\",\n  \"amount\": 150.00,\n  \"due_date\": \"2024-02-15\",\n  \"description\": \"Mensalidade Janeiro 2024\",\n  \"type\": \"monthly\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_payments_get",
+      "_type": "request",
+      "parentId": "fld_payments",
+      "name": "Get Payment by ID",
+      "url": "{{ _.base_url }}/api/payments/{{ _.payment_id }}",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_payments_update",
+      "_type": "request",
+      "parentId": "fld_payments",
+      "name": "Update Payment",
+      "url": "{{ _.base_url }}/api/payments/{{ _.payment_id }}",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"amount\": 180.00,\n  \"due_date\": \"2024-02-20\",\n  \"description\": \"Mensalidade Janeiro 2024 - Atualizada\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_payments_delete",
+      "_type": "request",
+      "parentId": "fld_payments",
+      "name": "Delete Payment",
+      "url": "{{ _.base_url }}/api/payments/{{ _.payment_id }}",
+      "method": "DELETE",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_payments_pay",
+      "_type": "request",
+      "parentId": "fld_payments",
+      "name": "Mark as Paid",
+      "url": "{{ _.base_url }}/api/payments/{{ _.payment_id }}/pay",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"payment_method\": \"credit_card\",\n  \"payment_date\": \"2024-01-15\"\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_payments_overdue",
+      "_type": "request",
+      "parentId": "fld_payments",
+      "name": "Overdue Payments",
+      "url": "{{ _.base_url }}/api/payments/overdue",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_payments_generate",
+      "_type": "request",
+      "parentId": "fld_payments",
+      "name": "Generate Monthly",
+      "url": "{{ _.base_url }}/api/payments/generate-monthly",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"month\": 2,\n  \"year\": 2024\n}"
+      },
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_payments_by_student",
+      "_type": "request",
+      "parentId": "fld_payments",
+      "name": "Payments by Student",
+      "url": "{{ _.base_url }}/api/payments/student/{{ _.student_id }}",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "fld_reports",
+      "_type": "request_group",
+      "parentId": "wrk_okami_api",
+      "name": "📊 Reports"
+    },
+    {
+      "_id": "req_reports_dashboard",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Dashboard",
+      "url": "{{ _.base_url }}/api/reports/dashboard",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_reports_attendance",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Attendance Report",
+      "url": "{{ _.base_url }}/api/reports/attendance",
+      "method": "GET",
+      "parameters": [
+        {"name": "start_date", "value": "2024-01-01"},
+        {"name": "end_date", "value": "2024-01-31"}
+      ],
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_reports_financial",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Financial Report",
+      "url": "{{ _.base_url }}/api/reports/financial",
+      "method": "GET",
+      "parameters": [
+        {"name": "start_date", "value": "2024-01-01"},
+        {"name": "end_date", "value": "2024-01-31"}
+      ],
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_reports_students",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Students Report",
+      "url": "{{ _.base_url }}/api/reports/students",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    },
+    {
+      "_id": "req_reports_classes",
+      "_type": "request",
+      "parentId": "fld_reports",
+      "name": "Classes Report",
+      "url": "{{ _.base_url }}/api/reports/classes",
+      "method": "GET",
+      "headers": [
+        {"name": "Authorization", "value": "Bearer {{ _.token }}"}
+      ]
+    }
+  ]
+} 

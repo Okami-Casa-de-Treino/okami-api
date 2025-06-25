@@ -1,0 +1,530 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2024-01-15T00:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "req_group_root",
+      "_type": "request_group",
+      "parentId": "wrk_okami_api",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "name": "Okami Gym API",
+      "description": "Complete API collection for Okami Gym Management System",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1705276800000
+    },
+    {
+      "_id": "wrk_okami_api",
+      "_type": "workspace",
+      "parentId": null,
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "name": "Okami Gym API",
+      "description": "Gym Management System API Testing"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_okami_api",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:3000",
+        "token": "",
+        "student_id": "",
+        "teacher_id": "",
+        "class_id": "",
+        "payment_id": "",
+        "checkin_id": ""
+      },
+      "dataPropertyOrder": {
+        "&": ["base_url", "token", "student_id", "teacher_id", "class_id", "payment_id", "checkin_id"]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1705276800000
+    },
+    {
+      "_id": "fld_health",
+      "_type": "request_group",
+      "parentId": "req_group_root",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "name": "Health Check",
+      "description": "System health endpoints",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1705276800000
+    },
+    {
+      "_id": "req_health_check",
+      "_type": "request",
+      "parentId": "fld_health",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/health",
+      "name": "Health Check",
+      "description": "Check API and database health status",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1705276800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "req_group_root",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "name": "Authentication",
+      "description": "Authentication endpoints",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1705276700000
+    },
+    {
+      "_id": "req_auth_login",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/auth/login",
+      "name": "Login",
+      "description": "Authenticate user and get access token",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_auth_profile",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/auth/profile",
+      "name": "Get Profile",
+      "description": "Get current user profile",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276700000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_auth_refresh",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/auth/refresh",
+      "name": "Refresh Token",
+      "description": "Refresh access token",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"refreshToken\": \"your_refresh_token_here\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276600000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_auth_logout",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/auth/logout",
+      "name": "Logout",
+      "description": "Logout and invalidate token",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276500000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_students",
+      "_type": "request_group",
+      "parentId": "req_group_root",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "name": "Students",
+      "description": "Student management endpoints",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1705276600000
+    },
+    {
+      "_id": "req_students_list",
+      "_type": "request",
+      "parentId": "fld_students",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/students",
+      "name": "List Students",
+      "description": "Get all students",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_students_create",
+      "_type": "request",
+      "parentId": "fld_students",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/students",
+      "name": "Create Student",
+      "description": "Create a new student (admin/receptionist only)",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"João Silva\",\n  \"email\": \"joao@email.com\",\n  \"phone\": \"11999999999\",\n  \"cpf\": \"12345678901\",\n  \"birth_date\": \"1990-01-15\",\n  \"address\": \"Rua das Flores, 123\",\n  \"emergency_contact\": \"Maria Silva - 11888888888\",\n  \"medical_conditions\": \"Nenhuma\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276700000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_students_get",
+      "_type": "request",
+      "parentId": "fld_students",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}",
+      "name": "Get Student by ID",
+      "description": "Get student details by ID",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276600000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_students_update",
+      "_type": "request",
+      "parentId": "fld_students",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}",
+      "name": "Update Student",
+      "description": "Update student information (admin/receptionist only)",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"João Silva Santos\",\n  \"email\": \"joao.santos@email.com\",\n  \"phone\": \"11999999999\",\n  \"address\": \"Rua das Flores, 456\",\n  \"emergency_contact\": \"Maria Silva - 11888888888\",\n  \"medical_conditions\": \"Hipertensão controlada\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276500000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_students_delete",
+      "_type": "request",
+      "parentId": "fld_students",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}",
+      "name": "Delete Student",
+      "description": "Delete student (admin only)",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276400000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_students_classes",
+      "_type": "request",
+      "parentId": "fld_students",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}/classes",
+      "name": "Get Student Classes",
+      "description": "Get classes enrolled by student",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276300000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_students_enroll",
+      "_type": "request",
+      "parentId": "fld_students",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}/classes",
+      "name": "Enroll Student in Class",
+      "description": "Enroll student in a class (admin/receptionist only)",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"class_id\": \"{{ _.class_id }}\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276200000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_students_unenroll",
+      "_type": "request",
+      "parentId": "fld_students",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}/classes/{{ _.class_id }}",
+      "name": "Unenroll Student from Class",
+      "description": "Remove student from class (admin/receptionist only)",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276100000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_students_checkins",
+      "_type": "request",
+      "parentId": "fld_students",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}/checkins",
+      "name": "Get Student Checkins",
+      "description": "Get all checkins for a student",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705276000000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_students_payments",
+      "_type": "request",
+      "parentId": "fld_students",
+      "modified": 1705276800000,
+      "created": 1705276800000,
+      "url": "{{ _.base_url }}/api/students/{{ _.student_id }}/payments",
+      "name": "Get Student Payments",
+      "description": "Get all payments for a student",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1705275900000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    }
+  ]
+} 

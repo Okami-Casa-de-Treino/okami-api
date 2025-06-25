@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: okami-postgres
+    environment:
+      POSTGRES_DB: okami_gym
+      POSTGRES_USER: okami_user
+      POSTGRES_PASSWORD: okami_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - okami-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U okami_user -d okami_gym"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: okami-api
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://okami_user:okami_password@postgres:5432/okami_gym
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - okami-network
+    volumes:
+      - ./src:/app/src
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+    command: bun --hot src/index.ts
+
+  adminer:
+    image: adminer
+    container_name: okami-adminer
+    ports:
+      - "8080:8080"
+    networks:
+      - okami-network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+
+networks:
+  okami-network:
+    driver: bridge 
