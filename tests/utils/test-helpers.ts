@@ -116,12 +116,14 @@ export class TestHelpers {
 
   // Test data generators
   static generateStudentData(overrides: Partial<any> = {}) {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
     return {
       full_name: "Test Student",
       birth_date: "1990-01-15",
       cpf: `${Math.floor(Math.random() * 900 + 100)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`,
-      phone: "11999999999",
-      email: `test.student.${Date.now()}@test.com`,
+      phone: `11${timestamp.toString().slice(-8)}`,
+      email: `test.student.${timestamp}.${random}@test.com`,
       emergency_contact_name: "Emergency Contact",
       emergency_contact_phone: "11888888888",
       emergency_contact_relationship: "Parent",
@@ -132,12 +134,14 @@ export class TestHelpers {
   }
 
   static generateTeacherData(overrides: Partial<any> = {}) {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
     return {
       full_name: "Test Teacher",
       birth_date: "1985-01-01",
       cpf: `${Math.floor(Math.random() * 900 + 100)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`,
-      phone: "11888888888",
-      email: `test.teacher.${Date.now()}@test.com`,
+      phone: `11${timestamp.toString().slice(-8)}`,
+      email: `test.teacher.${timestamp}.${random}@test.com`,
       belt: "Black",
       belt_degree: 3,
       specialties: ["Karate", "Self Defense"],

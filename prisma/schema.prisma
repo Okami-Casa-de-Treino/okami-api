@@ -18,8 +18,8 @@ model Student {
   belt                           String?         @db.VarChar(50)
   belt_degree                    Int?            @default(1)
   address                        String?
-  phone                          String?         @db.VarChar(20)
-  email                          String?         @db.VarChar(255)
+  phone                          String?         @unique @db.VarChar(20)
+  email                          String?         @unique @db.VarChar(255)
   emergency_contact_name         String?         @db.VarChar(255)
   emergency_contact_phone        String?         @db.VarChar(20)
   emergency_contact_relationship String?         @db.VarChar(100)
@@ -45,8 +45,8 @@ model Teacher {
   full_name   String          @db.VarChar(255)
   birth_date  DateTime?       @db.Date
   cpf         String?         @unique @db.VarChar(14)
-  phone       String?         @db.VarChar(20)
-  email       String?         @db.VarChar(255)
+  phone       String?         @unique @db.VarChar(20)
+  email       String?         @unique @db.VarChar(255)
   belt        String?         @db.VarChar(50)
   belt_degree Int?
   specialties Json?

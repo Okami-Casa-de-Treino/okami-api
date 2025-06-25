@@ -80,6 +80,94 @@ describe("API: Students", () => {
       expect(data.data.id).toBeDefined();
       expect(data.message).toBe("Aluno criado com sucesso");
     });
+
+    it("should reject duplicate email", async () => {
+      const studentData1 = TestHelpers.generateStudentData({
+        email: "duplicate@test.com",
+        phone: "11999999991"
+      });
+      const studentData2 = TestHelpers.generateStudentData({
+        email: "duplicate@test.com", // Same email
+        phone: "11999999992", // Different phone
+        cpf: "98765432100" // Different CPF
+      });
+
+      // Create first student
+      const response1 = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData1)
+      }, "admin");
+      expect(response1.status).toBe(201);
+
+      // Try to create second student with same email
+      const response2 = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData2)
+      }, "admin");
+      expect(response2.status).toBe(409);
+      const data2 = await response2.json() as any;
+      expect(data2.success).toBe(false);
+      expect(data2.error).toBe("Email já cadastrado");
+    });
+
+    it("should reject duplicate phone", async () => {
+      const studentData1 = TestHelpers.generateStudentData({
+        email: "unique1@test.com",
+        phone: "11999999993"
+      });
+      const studentData2 = TestHelpers.generateStudentData({
+        email: "unique2@test.com", // Different email
+        phone: "11999999993", // Same phone
+        cpf: "98765432101" // Different CPF
+      });
+
+      // Create first student
+      const response1 = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData1)
+      }, "admin");
+      expect(response1.status).toBe(201);
+
+      // Try to create second student with same phone
+      const response2 = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData2)
+      }, "admin");
+      expect(response2.status).toBe(409);
+      const data2 = await response2.json() as any;
+      expect(data2.success).toBe(false);
+      expect(data2.error).toBe("Telefone já cadastrado");
+    });
+
+    it("should reject duplicate CPF", async () => {
+      const studentData1 = TestHelpers.generateStudentData({
+        email: "unique3@test.com",
+        phone: "11999999994",
+        cpf: "12345678901"
+      });
+      const studentData2 = TestHelpers.generateStudentData({
+        email: "unique4@test.com", // Different email
+        phone: "11999999995", // Different phone
+        cpf: "12345678901" // Same CPF
+      });
+
+      // Create first student
+      const response1 = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData1)
+      }, "admin");
+      expect(response1.status).toBe(201);
+
+      // Try to create second student with same CPF
+      const response2 = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData2)
+      }, "admin");
+      expect(response2.status).toBe(409);
+      const data2 = await response2.json() as any;
+      expect(data2.success).toBe(false);
+      expect(data2.error).toBe("CPF já cadastrado");
+    });
   });
 
   describe("GET /api/students", () => {

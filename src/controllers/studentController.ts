@@ -263,6 +263,7 @@ export class StudentController {
           const field = error.meta?.target?.[0];
           const message = field === 'cpf' ? 'CPF já cadastrado' : 
                          field === 'email' ? 'Email já cadastrado' : 
+                         field === 'phone' ? 'Telefone já cadastrado' :
                          'Dados já cadastrados';
           
           return new Response(
@@ -407,6 +408,7 @@ export class StudentController {
           const field = error.meta?.target?.[0];
           const message = field === 'cpf' ? 'CPF já cadastrado para outro aluno' : 
                          field === 'email' ? 'Email já cadastrado para outro aluno' : 
+                         field === 'phone' ? 'Telefone já cadastrado para outro aluno' :
                          'Dados já cadastrados para outro aluno';
           
           return new Response(

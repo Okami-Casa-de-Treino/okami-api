@@ -249,6 +249,7 @@ export class TeacherController {
           const field = error.meta?.target?.[0];
           const message = field === 'cpf' ? 'CPF já cadastrado' : 
                          field === 'email' ? 'Email já cadastrado' : 
+                         field === 'phone' ? 'Telefone já cadastrado' :
                          'Dados já cadastrados';
           
           return new Response(
@@ -378,6 +379,7 @@ export class TeacherController {
           const field = error.meta?.target?.[0];
           const message = field === 'cpf' ? 'CPF já cadastrado para outro professor' : 
                          field === 'email' ? 'Email já cadastrado para outro professor' : 
+                         field === 'phone' ? 'Telefone já cadastrado para outro professor' :
                          'Dados já cadastrados para outro professor';
           
           return new Response(
