@@ -46,8 +46,21 @@ export class DatabaseManager {
     await this.pool.end();
   }
 
-  // Seed default admin user
+  // Seed default admin user (legacy method - now uses DatabaseSeeder)
   async seedDefaultUser(): Promise<void> {
+    try {
+      // Import the seeder dynamically to avoid circular dependencies
+      const { DatabaseSeeder } = await import("./seed-simple.js");
+      await DatabaseSeeder.seedUsers();
+    } catch (error) {
+      console.error("Failed to seed default users:", error);
+      // Fallback to basic admin creation
+      await this.createBasicAdmin();
+    }
+  }
+
+  // Fallback method for basic admin creation
+  private async createBasicAdmin(): Promise<void> {
     const bcrypt = await import("bcryptjs");
     const client = await this.pool.connect();
     
@@ -55,15 +68,15 @@ export class DatabaseManager {
       const result = await client.query("SELECT * FROM users WHERE username = $1", ["admin"]);
       
       if (result.rows.length === 0) {
-        const hashedPassword = await bcrypt.hash("admin123", 10);
+        const hashedPassword = await bcrypt.hash("admin123", 12);
         const userId = this.generateId();
         
         await client.query(`
-          INSERT INTO users (id, username, password_hash, role)
-          VALUES ($1, $2, $3, $4)
-        `, [userId, "admin", hashedPassword, "admin"]);
+          INSERT INTO users (id, username, email, password_hash, role, status)
+          VALUES ($1, $2, $3, $4, $5, $6)
+        `, [userId, "admin", "admin@okami.gym", hashedPassword, "admin", "active"]);
         
-        console.log("Default admin user created: admin/admin123");
+        console.log("✨ Fallback admin user created: admin/admin123");
       }
     } finally {
       client.release();

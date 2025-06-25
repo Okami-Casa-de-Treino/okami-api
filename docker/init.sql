@@ -175,4 +175,26 @@ CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column(); 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Insert default admin user
+-- Password: admin123 (hashed with bcrypt, salt rounds: 12)
+INSERT INTO users (username, email, password_hash, role, status) 
+VALUES (
+    'admin', 
+    'admin@okami.gym', 
+    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj3bp.Dg5Kv2', 
+    'admin', 
+    'active'
+) ON CONFLICT (username) DO NOTHING;
+
+-- Insert default receptionist user  
+-- Password: recep123 (hashed with bcrypt, salt rounds: 12)
+INSERT INTO users (username, email, password_hash, role, status)
+VALUES (
+    'receptionist',
+    'receptionist@okami.gym',
+    '$2a$12$8Nv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj3bp.Dg5Kv2',
+    'receptionist',
+    'active'
+) ON CONFLICT (username) DO NOTHING; 

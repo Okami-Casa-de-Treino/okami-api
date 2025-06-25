@@ -135,6 +135,11 @@ export class AuthMiddleware {
     }
 
     const token = authHeader.substring(7);
+    
+    if (!token || token.trim().length === 0) {
+      return null;
+    }
+    
     const payload = this.verifyToken(token);
 
     if (!payload) {
@@ -147,7 +152,7 @@ export class AuthMiddleware {
       role: payload.role as 'admin' | 'teacher' | 'receptionist',
       email: undefined,
       teacher_id: undefined,
-      status: 'active',
+      status: 'active' as 'active' | 'inactive',
       created_at: '',
       updated_at: ''
     };

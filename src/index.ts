@@ -2,6 +2,11 @@ import { dbManager } from "./config/database.js";
 import { apiRouter } from "./routes/index.js";
 import { SwaggerHandler } from "./utils/swagger-handler.js";
 
+// Load environment variables
+if (process.env.NODE_ENV !== 'production') {
+  console.log("🔧 Loading environment variables from .env file");
+}
+
 const PORT = process.env.PORT || 3000;
 
 // CORS headers

@@ -10,6 +10,9 @@
     "docker:dev": "docker-compose up --build",
     "docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build",
     "db:setup": "docker-compose up postgres -d",
+    "db:seed": "bun run src/config/seed-simple.ts all",
+    "db:seed:users": "bun run src/config/seed-simple.ts users",
+    "db:seed:admin": "bun run src/config/seed-simple.ts admin",
     "test": "bun test",
     "lint": "tsc --noEmit",
     "clean": "rm -rf dist node_modules/.cache"
