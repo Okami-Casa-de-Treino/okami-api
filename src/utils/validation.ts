@@ -40,7 +40,9 @@ export const createClassSchema = z.object({
   name: z.string().min(2, "Nome da aula deve ter pelo menos 2 caracteres"),
   description: z.string().optional(),
   teacher_id: z.string().uuid("ID do professor deve ser um UUID válido").optional(),
-  day_of_week: z.number().int().min(0).max(6, "Dia da semana deve ser entre 0 (domingo) e 6 (sábado)"),
+  days_of_week: z.array(z.number().int().min(0).max(6, "Dia da semana deve ser entre 0 (domingo) e 6 (sábado)"))
+    .min(1, "Deve ter pelo menos um dia da semana")
+    .refine(days => [...new Set(days)].length === days.length, "Não pode haver dias duplicados"),
   start_time: z.string().regex(/^\d{2}:\d{2}$/, "Horário deve estar no formato HH:MM"),
   end_time: z.string().regex(/^\d{2}:\d{2}$/, "Horário deve estar no formato HH:MM"),
   max_students: z.number().int().positive("Número máximo de alunos deve ser positivo").optional(),
@@ -156,15 +158,15 @@ export function formatPhone(phone: string | undefined): string {
   } else if (cleanPhone.length === 10) {
     return cleanPhone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
   }
-  return phone;
+  return cleanPhone || phone || '';
 }
 
-export function cleanPhone(phone: string): string {
+export function cleanPhone(phone: string | undefined): string {
   if (!phone) return '';
   return phone.replace(/[^\d]/g, '');
 }
 
-export function cleanCPF(cpf: string): string {
+export function cleanCPF(cpf: string | undefined): string {
   if (!cpf) return '';
   return cpf.replace(/[^\d]/g, '');
 } 

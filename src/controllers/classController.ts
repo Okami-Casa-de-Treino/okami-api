@@ -246,15 +246,21 @@ export class ClassController {
           );
         }
 
+        // Convert time strings to DateTime objects
+        const startTime = new Date(`1970-01-01T${classData.start_time}:00.000Z`);
+        const endTime = new Date(`1970-01-01T${classData.end_time}:00.000Z`);
+
         const newClass = await prisma.class.create({
           data: {
             name: classData.name,
             description: classData.description,
             teacher_id: classData.teacher_id,
-            day_of_week: classData.day_of_week,
-            start_time: classData.start_time,
-            end_time: classData.end_time,
-            max_students: classData.max_students
+            days_of_week: classData.days_of_week,
+            start_time: startTime,
+            end_time: endTime,
+            max_students: classData.max_students,
+            belt_requirement: classData.belt_requirement,
+            age_group: classData.age_group
           },
           include: {
             teacher: {
@@ -393,10 +399,16 @@ export class ClassController {
 
         updateData.teacher = { connect: { id: classData.teacher_id } };
       }
-      if (classData.day_of_week !== undefined) updateData.day_of_week = classData.day_of_week;
-      if (classData.start_time !== undefined) updateData.start_time = classData.start_time;
-      if (classData.end_time !== undefined) updateData.end_time = classData.end_time;
+      if (classData.days_of_week !== undefined) updateData.days_of_week = classData.days_of_week;
+      if (classData.start_time !== undefined) {
+        updateData.start_time = new Date(`1970-01-01T${classData.start_time}:00.000Z`);
+      }
+      if (classData.end_time !== undefined) {
+        updateData.end_time = new Date(`1970-01-01T${classData.end_time}:00.000Z`);
+      }
       if (classData.max_students !== undefined) updateData.max_students = classData.max_students;
+      if (classData.belt_requirement !== undefined) updateData.belt_requirement = classData.belt_requirement;
+      if (classData.age_group !== undefined) updateData.age_group = classData.age_group;
 
       if (Object.keys(updateData).length === 0) {
         return new Response(
@@ -737,7 +749,7 @@ export class ClassController {
               select: {
                 id: true,
                 name: true,
-                day_of_week: true,
+                days_of_week: true,
                 start_time: true,
                 end_time: true
               }

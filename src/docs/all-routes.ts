@@ -891,7 +891,7 @@
  *               payment_date:
  *                 type: string
  *                 format: date
- *                 description: Data do pagamento (padrão: hoje)
+ *                 description: "Data do pagamento (padrão: hoje)"
  *               notes:
  *                 type: string
  *     responses:

@@ -154,7 +154,7 @@ describe("Unit: Validation Schemas", () => {
       const validData = {
         name: "Karatê Infantil",
         description: "Aula de karatê para crianças",
-        day_of_week: 1,
+        days_of_week: [1, 3, 5],
         start_time: "18:00",
         end_time: "19:00",
         max_students: 20
@@ -167,7 +167,7 @@ describe("Unit: Validation Schemas", () => {
     it("should reject invalid day of week", () => {
       const invalidData = {
         name: "Karatê Infantil",
-        day_of_week: 8,
+        days_of_week: [8],
         start_time: "18:00",
         end_time: "19:00"
       };
@@ -179,8 +179,32 @@ describe("Unit: Validation Schemas", () => {
     it("should reject invalid time format", () => {
       const invalidData = {
         name: "Karatê Infantil",
-        day_of_week: 1,
+        days_of_week: [1],
         start_time: "6:00 PM",
+        end_time: "19:00"
+      };
+
+      const result = createClassSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+    });
+
+    it("should reject empty days array", () => {
+      const invalidData = {
+        name: "Karatê Infantil",
+        days_of_week: [],
+        start_time: "18:00",
+        end_time: "19:00"
+      };
+
+      const result = createClassSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+    });
+
+    it("should reject duplicate days", () => {
+      const invalidData = {
+        name: "Karatê Infantil",
+        days_of_week: [1, 1, 3],
+        start_time: "18:00",
         end_time: "19:00"
       };
 

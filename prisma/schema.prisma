@@ -67,7 +67,7 @@ model Class {
   name             String         @db.VarChar(255)
   description      String?
   teacher_id       String?        @db.Uuid
-  day_of_week      Int?
+  days_of_week     Int[]
   start_time       DateTime?      @db.Time(6)
   end_time         DateTime?      @db.Time(6)
   max_students     Int?           @default(30)
@@ -80,7 +80,6 @@ model Class {
   teacher          Teacher?       @relation(fields: [teacher_id], references: [id], onUpdate: NoAction)
   student_classes  StudentClass[]
 
-  @@index([day_of_week], map: "idx_classes_day_of_week")
   @@index([status], map: "idx_classes_status")
   @@index([teacher_id], map: "idx_classes_teacher_id")
   @@map("classes")
