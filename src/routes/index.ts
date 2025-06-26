@@ -206,7 +206,7 @@ export class APIRouter {
     const studentCheckinsMatch = path.match(/^\/api\/students\/([a-f0-9-]+)\/checkins$/);
     if (studentCheckinsMatch && studentCheckinsMatch[1] && method === "GET") {
       const studentId = studentCheckinsMatch[1];
-      return await checkinController.getByStudent(request, studentId);
+      return await checkinController.getStudentCheckins(request, studentId);
     }
 
     // Student payments
@@ -297,9 +297,18 @@ export class APIRouter {
       }
     }
 
-    // Class schedule
+    // Class schedule - TODO: Implement getSchedule method
     if (path === "/api/classes/schedule" && method === "GET") {
-      return await classController.getSchedule(request);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Endpoint não implementado"
+        }),
+        {
+          status: 501,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
     }
 
     // Class by ID
@@ -324,14 +333,14 @@ export class APIRouter {
     const classStudentsMatch = path.match(/^\/api\/classes\/([a-f0-9-]+)\/students$/);
     if (classStudentsMatch && classStudentsMatch[1] && method === "GET") {
       const classId = classStudentsMatch[1];
-      return await classController.getStudents(request, classId);
+      return await classController.getClassStudents(request, classId);
     }
 
     // Class checkins
     const classCheckinsMatch = path.match(/^\/api\/classes\/([a-f0-9-]+)\/checkins$/);
     if (classCheckinsMatch && classCheckinsMatch[1] && method === "GET") {
       const classId = classCheckinsMatch[1];
-      return await classController.getCheckins(request, classId);
+      return await checkinController.getClassCheckins(request, classId);
     }
 
     return null;
@@ -350,21 +359,21 @@ export class APIRouter {
 
     // Today's checkins
     if (path === "/api/checkins/today" && method === "GET") {
-      return await checkinController.getToday(request);
+      return await checkinController.getTodayCheckins(request);
     }
 
     // Checkin by student
     const checkinStudentMatch = path.match(/^\/api\/checkins\/student\/([a-f0-9-]+)$/);
     if (checkinStudentMatch && checkinStudentMatch[1] && method === "GET") {
       const studentId = checkinStudentMatch[1];
-      return await checkinController.getByStudent(request, studentId);
+      return await checkinController.getStudentCheckins(request, studentId);
     }
 
     // Checkin by class
     const checkinClassMatch = path.match(/^\/api\/checkins\/class\/([a-f0-9-]+)$/);
     if (checkinClassMatch && checkinClassMatch[1] && method === "GET") {
       const classId = checkinClassMatch[1];
-      return await checkinController.getByClass(request, classId);
+      return await checkinController.getClassCheckins(request, classId);
     }
 
     // Delete checkin

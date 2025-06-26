@@ -15,7 +15,7 @@ export interface Student {
   medical_observations?: string;
   photo_url?: string;
   enrollment_date: string;
-  monthly_fee?: number;
+  monthly_fee?: number | null;
   status: 'active' | 'inactive' | 'suspended';
   created_at: string;
   updated_at: string;
@@ -29,9 +29,9 @@ export interface Teacher {
   phone?: string;
   email?: string;
   belt?: string;
-  belt_degree?: number;
+  belt_degree?: number | null;
   specialties?: string[];
-  hourly_rate?: number;
+  hourly_rate?: number | null;
   status: 'active' | 'inactive';
   created_at: string;
   updated_at: string;
@@ -108,7 +108,7 @@ export interface CreateStudentRequest {
   cpf?: string;
   rg?: string;
   belt?: string;
-  belt_degree?: number;
+  belt_degree?: number | null;
   address?: string;
   phone?: string;
   email?: string;
@@ -116,7 +116,7 @@ export interface CreateStudentRequest {
   emergency_contact_phone?: string;
   emergency_contact_relationship?: string;
   medical_observations?: string;
-  monthly_fee?: number;
+  monthly_fee?: number | null;
 }
 
 export interface CreateTeacherRequest {
@@ -126,9 +126,9 @@ export interface CreateTeacherRequest {
   phone?: string;
   email?: string;
   belt?: string;
-  belt_degree?: number;
+  belt_degree?: number | null;
   specialties?: string[];
-  hourly_rate?: number;
+  hourly_rate?: number | null;
 }
 
 export interface CreateClassRequest {
@@ -138,7 +138,7 @@ export interface CreateClassRequest {
   day_of_week: number;
   start_time: string;
   end_time: string;
-  max_students?: number;
+  max_students?: number | null;
   belt_requirement?: string;
   age_group?: string;
 }
@@ -155,7 +155,7 @@ export interface CreatePaymentRequest {
   amount: number;
   due_date: string;
   reference_month: string;
-  discount?: number;
+  discount?: number | null;
   notes?: string;
 }
 

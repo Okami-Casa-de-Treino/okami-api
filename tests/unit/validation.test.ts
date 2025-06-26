@@ -111,6 +111,17 @@ describe("Unit: Validation Schemas", () => {
       const result = createStudentSchema.safeParse(minimalData);
       expect(result.success).toBe(true);
     });
+
+    it("should accept student with monthly_fee as null", () => {
+      const validData = {
+        full_name: "João Silva",
+        birth_date: "1990-01-15",
+        monthly_fee: null
+      };
+
+      const result = createStudentSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
   });
 
   describe("createTeacherSchema", () => {
@@ -146,6 +157,77 @@ describe("Unit: Validation Schemas", () => {
 
       const result = createTeacherSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
+    });
+
+    it("should accept teacher without hourly_rate (optional field)", () => {
+      const validData = {
+        full_name: "Carlos Instrutor",
+        email: "carlos@email.com",
+        phone: "11888888888",
+        belt: "Preta",
+        belt_degree: 3
+        // hourly_rate is intentionally omitted
+      };
+
+      const result = createTeacherSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+
+    it("should accept teacher with hourly_rate as null", () => {
+      const validData = {
+        full_name: "Carlos Instrutor",
+        email: "carlos@email.com",
+        phone: "11888888888",
+        belt: "Preta",
+        belt_degree: 3,
+        hourly_rate: null
+      };
+
+      const result = createTeacherSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+
+    it("should accept teacher with hourly_rate as 0", () => {
+      const validData = {
+        full_name: "Carlos Instrutor",
+        hourly_rate: 0
+      };
+
+      const result = createTeacherSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+
+    it("should accept teacher with birth_date as null", () => {
+      const validData = {
+        full_name: "Carlos Instrutor",
+        birth_date: null
+      };
+
+      const result = createTeacherSchema.safeParse(validData);
+      expect(result.success).toBe(true);
+    });
+
+    it("should reject teacher with invalid birth_date format", () => {
+      const invalidData = {
+        full_name: "Carlos Instrutor",
+        birth_date: "15/03/1980"  // Wrong format
+      };
+
+      const result = createTeacherSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toContain("Data deve estar no formato YYYY-MM-DD");
+      }
+    });
+
+    it("should accept teacher with valid birth_date format", () => {
+      const validData = {
+        full_name: "Carlos Instrutor",
+        birth_date: "1980-03-15"  // Correct format
+      };
+
+      const result = createTeacherSchema.safeParse(validData);
+      expect(result.success).toBe(true);
     });
   });
 

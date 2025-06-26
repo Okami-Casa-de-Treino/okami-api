@@ -7,7 +7,7 @@ export const createStudentSchema = z.object({
   cpf: z.string().regex(/^\d{11}$/, "CPF deve conter apenas 11 dígitos").optional(),
   rg: z.string().optional(),
   belt: z.string().optional(),
-  belt_degree: z.number().int().min(1).max(10).optional(),
+  belt_degree: z.number().int().min(1).max(10).nullable().optional(),
   address: z.string().optional(),
   phone: z.string().regex(/^\d{10,11}$/, "Telefone deve conter apenas dígitos (10 ou 11 dígitos)").optional(),
   email: z.string().email("Email inválido").optional(),
@@ -15,7 +15,10 @@ export const createStudentSchema = z.object({
   emergency_contact_phone: z.string().optional(),
   emergency_contact_relationship: z.string().optional(),
   medical_observations: z.string().optional(),
-  monthly_fee: z.number().positive("Mensalidade deve ser positiva").optional(),
+  monthly_fee: z.union([
+    z.number().min(0, "Mensalidade não pode ser negativa"),
+    z.null()
+  ]).optional(),
 });
 
 export const updateStudentSchema = createStudentSchema.partial();
@@ -23,14 +26,27 @@ export const updateStudentSchema = createStudentSchema.partial();
 // Teacher validation schemas
 export const createTeacherSchema = z.object({
   full_name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
+  birth_date: z.string()
+    .transform(val => {
+      // Handle ISO datetime format by extracting just the date part
+      if (val && val.includes('T')) {
+        return val.split('T')[0];
+      }
+      return val;
+    })
+    .pipe(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD"))
+    .nullable()
+    .optional(),
   cpf: z.string().regex(/^\d{11}$/, "CPF deve conter apenas 11 dígitos").optional(),
   phone: z.string().regex(/^\d{10,11}$/, "Telefone deve conter apenas dígitos (10 ou 11 dígitos)").optional(),
   email: z.string().email("Email inválido").optional(),
   belt: z.string().optional(),
-  belt_degree: z.number().int().min(1).max(10).optional(),
+  belt_degree: z.number().int().min(1).max(10).nullable().optional(),
   specialties: z.array(z.string()).optional(),
-  hourly_rate: z.number().positive("Valor por hora deve ser positivo").optional(),
+  hourly_rate: z.union([
+    z.number().min(0, "Valor por hora não pode ser negativo"),
+    z.null()
+  ]).optional(),
 });
 
 export const updateTeacherSchema = createTeacherSchema.partial();
@@ -45,7 +61,10 @@ export const createClassSchema = z.object({
     .refine(days => [...new Set(days)].length === days.length, "Não pode haver dias duplicados"),
   start_time: z.string().regex(/^\d{2}:\d{2}$/, "Horário deve estar no formato HH:MM"),
   end_time: z.string().regex(/^\d{2}:\d{2}$/, "Horário deve estar no formato HH:MM"),
-  max_students: z.number().int().positive("Número máximo de alunos deve ser positivo").optional(),
+  max_students: z.union([
+    z.number().int().positive("Número máximo de alunos deve ser positivo"),
+    z.null()
+  ]).optional(),
   belt_requirement: z.string().optional(),
   age_group: z.string().optional(),
 });
@@ -66,7 +85,7 @@ export const createPaymentSchema = z.object({
   amount: z.number().positive("Valor deve ser positivo"),
   due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD"),
   reference_month: z.string().regex(/^\d{4}-\d{2}$/, "Mês de referência deve estar no formato YYYY-MM"),
-  discount: z.number().min(0, "Desconto não pode ser negativo").optional(),
+  discount: z.number().min(0, "Desconto não pode ser negativo").nullable().optional(),
   notes: z.string().optional(),
 });
 
@@ -74,8 +93,8 @@ export const updatePaymentSchema = z.object({
   payment_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
   payment_method: z.enum(["cash", "card", "pix", "bank_transfer"]).optional(),
   status: z.enum(["pending", "paid", "overdue", "cancelled"]).optional(),
-  discount: z.number().min(0, "Desconto não pode ser negativo").optional(),
-  late_fee: z.number().min(0, "Multa não pode ser negativa").optional(),
+  discount: z.number().min(0, "Desconto não pode ser negativo").nullable().optional(),
+  late_fee: z.number().min(0, "Multa não pode ser negativa").nullable().optional(),
   notes: z.string().optional(),
 });
 
