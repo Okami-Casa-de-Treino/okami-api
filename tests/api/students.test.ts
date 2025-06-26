@@ -168,6 +168,30 @@ describe("API: Students", () => {
       expect(data2.success).toBe(false);
       expect(data2.error).toBe("CPF já cadastrado");
     });
+
+    it("should create student without monthly_fee (optional field)", async () => {
+      const studentData = TestHelpers.generateStudentData({
+        full_name: "Student Without Fee",
+        email: "nofee@test.com",
+        phone: "11999999996"
+        // Note: monthly_fee is intentionally omitted
+      });
+
+      const response = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData)
+      }, "admin");
+
+      expect(response.status).toBe(201);
+      
+      const data = await response.json() as any;
+      expect(data.success).toBe(true);
+      expect(data.data).toBeDefined();
+      expect(data.data.id).toBeDefined();
+      expect(data.data.full_name).toBe(studentData.full_name);
+      expect(data.data.monthly_fee).toBeNull(); // Should be null when not provided
+      expect(data.message).toBe("Aluno criado com sucesso");
+    });
   });
 
   describe("GET /api/students", () => {

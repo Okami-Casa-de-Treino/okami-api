@@ -278,7 +278,7 @@ export class APIRouter {
     const teacherClassesMatch = path.match(/^\/api\/teachers\/([a-f0-9-]+)\/classes$/);
     if (teacherClassesMatch && teacherClassesMatch[1] && method === "GET") {
       const teacherId = teacherClassesMatch[1];
-      return await teacherController.getClasses(request, teacherId);
+      return await teacherController.getTeacherClasses(request, teacherId);
     }
 
     return null;

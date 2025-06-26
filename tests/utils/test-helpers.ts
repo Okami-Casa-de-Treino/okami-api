@@ -128,7 +128,7 @@ export class TestHelpers {
       emergency_contact_phone: "11888888888",
       emergency_contact_relationship: "Parent",
       medical_observations: "None",
-      monthly_fee: 150.00,
+      // monthly_fee is now optional - only include if explicitly provided in overrides
       ...overrides
     };
   }
@@ -155,7 +155,7 @@ export class TestHelpers {
       name: "Test Class",
       description: "Test class description",
       teacher_id: teacherId,
-      day_of_week: 1, // Monday
+      days_of_week: [1], // Monday
       start_time: "18:00",
       end_time: "19:00",
       max_students: 20,

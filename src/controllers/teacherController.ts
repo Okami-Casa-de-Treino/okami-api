@@ -120,7 +120,7 @@ export class TeacherController {
               id: true,
               name: true,
               description: true,
-              day_of_week: true,
+              days_of_week: true,
               start_time: true,
               end_time: true,
               max_students: true,
@@ -558,8 +558,8 @@ export class TeacherController {
             }
           }
         },
-        orderBy: [
-          { day_of_week: 'asc' },
+                  orderBy: [
+            { days_of_week: 'asc' },
           { start_time: 'asc' }
         ]
       });

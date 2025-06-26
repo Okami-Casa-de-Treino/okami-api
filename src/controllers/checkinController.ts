@@ -47,22 +47,22 @@ export class CheckinController {
                 belt_degree: true,
                 status: true
               }
-            },
-            class: {
-              select: {
-                id: true,
-                name: true,
-                day_of_week: true,
-                start_time: true,
-                end_time: true,
-                teacher: {
-                  select: {
-                    id: true,
-                    full_name: true
-                  }
+                      },
+          class: {
+            select: {
+              id: true,
+              name: true,
+              days_of_week: true,
+              start_time: true,
+              end_time: true,
+              teacher: {
+                select: {
+                  id: true,
+                  full_name: true
                 }
               }
             }
+          }
           }
         }),
         prisma.checkin.count({ where })
@@ -134,7 +134,7 @@ export class CheckinController {
               id: true,
               name: true,
               description: true,
-              day_of_week: true,
+              days_of_week: true,
               start_time: true,
               end_time: true,
               teacher: {
@@ -350,7 +350,7 @@ export class CheckinController {
               select: {
                 id: true,
                 name: true,
-                day_of_week: true,
+                days_of_week: true,
                 start_time: true,
                 end_time: true
               }
@@ -507,23 +507,23 @@ export class CheckinController {
           orderBy: {
             checkin_date: 'desc'
           },
-          include: {
-            class: {
-              select: {
-                id: true,
-                name: true,
-                day_of_week: true,
-                start_time: true,
-                end_time: true,
-                teacher: {
-                  select: {
-                    id: true,
-                    full_name: true
-                  }
+                  include: {
+          class: {
+            select: {
+              id: true,
+              name: true,
+              days_of_week: true,
+              start_time: true,
+              end_time: true,
+              teacher: {
+                select: {
+                  id: true,
+                  full_name: true
                 }
               }
             }
           }
+        }
         }),
         prisma.checkin.count({ where })
       ]);
@@ -683,7 +683,7 @@ export class CheckinController {
             select: {
               id: true,
               name: true,
-              day_of_week: true,
+              days_of_week: true,
               start_time: true,
               end_time: true,
               teacher: {

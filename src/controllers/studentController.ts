@@ -590,7 +590,7 @@ export class StudentController {
               id: true,
               name: true,
               description: true,
-              day_of_week: true,
+              days_of_week: true,
               start_time: true,
               end_time: true,
               max_students: true,
@@ -606,7 +606,7 @@ export class StudentController {
           }
         },
         orderBy: [
-          { class: { day_of_week: 'asc' } },
+                      { class: { days_of_week: 'asc' } },
           { class: { start_time: 'asc' } }
         ]
       });
@@ -616,7 +616,7 @@ export class StudentController {
         id: sc.class.id,
         name: sc.class.name,
         description: sc.class.description,
-        day_of_week: sc.class.day_of_week,
+                    days_of_week: sc.class.days_of_week,
         start_time: sc.class.start_time,
         end_time: sc.class.end_time,
         max_students: sc.class.max_students,
