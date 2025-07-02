@@ -950,4 +950,139 @@ export class ClassController {
       );
     }
   }
+
+  async getSchedule(request: Request): Promise<Response> {
+    try {
+      const url = new URL(request.url);
+      const queryParams = Object.fromEntries(url.searchParams);
+      
+      // Optional filters
+      const teacherId = queryParams.teacher_id;
+      const status = queryParams.status || 'active';
+
+      // Build where clause
+      const where: Prisma.ClassWhereInput = {
+        status: status as any
+      };
+
+      if (teacherId && validateUUID(teacherId)) {
+        where.teacher_id = teacherId;
+      }
+
+      // Get all active classes with schedule information
+      const classes = await prisma.class.findMany({
+        where,
+        include: {
+          teacher: {
+            select: {
+              id: true,
+              full_name: true,
+              belt: true,
+              belt_degree: true
+            }
+          },
+          _count: {
+            select: {
+              student_classes: {
+                where: { status: 'active' }
+              }
+            }
+          }
+        },
+        orderBy: [
+          { start_time: 'asc' }
+        ]
+      });
+
+      // Days mapping (0 = Sunday, 1 = Monday, etc.)
+      const daysMap = {
+        0: 'Domingo',
+        1: 'Segunda-feira',
+        2: 'Terça-feira', 
+        3: 'Quarta-feira',
+        4: 'Quinta-feira',
+        5: 'Sexta-feira',
+        6: 'Sábado'
+      };
+
+      // Group classes by day of week
+      const schedule: Record<string, any[]> = {};
+      
+      // Initialize all days
+      Object.values(daysMap).forEach(day => {
+        schedule[day] = [];
+      });
+
+      classes.forEach(classItem => {
+        if (classItem.days_of_week && classItem.days_of_week.length > 0) {
+          classItem.days_of_week.forEach(dayNumber => {
+            const dayName = daysMap[dayNumber as keyof typeof daysMap];
+            if (dayName && schedule[dayName]) {
+              schedule[dayName].push({
+                id: classItem.id,
+                name: classItem.name,
+                description: classItem.description,
+                start_time: classItem.start_time,
+                end_time: classItem.end_time,
+                max_students: classItem.max_students,
+                current_students: classItem._count.student_classes,
+                belt_requirement: classItem.belt_requirement,
+                age_group: classItem.age_group,
+                teacher: classItem.teacher,
+                status: classItem.status
+              });
+            }
+          });
+        }
+      });
+
+      // Sort classes within each day by start time
+      Object.keys(schedule).forEach(day => {
+        if (schedule[day]) {
+          schedule[day].sort((a, b) => {
+            if (!a.start_time && !b.start_time) return 0;
+            if (!a.start_time) return 1;
+            if (!b.start_time) return -1;
+            
+            // Convert time to string for comparison
+            const timeA = a.start_time instanceof Date ? a.start_time.toISOString() : String(a.start_time);
+            const timeB = b.start_time instanceof Date ? b.start_time.toISOString() : String(b.start_time);
+            
+            return timeA.localeCompare(timeB);
+          });
+        }
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            schedule,
+            summary: {
+              total_classes: classes.length,
+              days_with_classes: Object.values(schedule).filter(dayClasses => dayClasses.length > 0).length,
+              teachers_count: [...new Set(classes.map(c => c.teacher_id).filter(Boolean))].length
+            }
+          }
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+
+    } catch (error) {
+      console.error("Get schedule error:", error);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Erro interno do servidor"
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+  }
 } 

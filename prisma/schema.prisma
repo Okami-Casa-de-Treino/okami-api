@@ -16,7 +16,7 @@ model Student {
   cpf                            String?         @unique @db.VarChar(14)
   rg                             String?         @db.VarChar(20)
   belt                           String?         @db.VarChar(50)
-  belt_degree                    Int?            @default(1)
+  belt_degree                    Int?            @default(0)
   address                        String?
   phone                          String?         @unique @db.VarChar(20)
   email                          String?         @unique @db.VarChar(255)
@@ -33,6 +33,7 @@ model Student {
   checkins                       Checkin[]
   payments                       Payment[]
   student_classes                StudentClass[]
+  belt_promotions                BeltPromotion[]
 
   @@index([cpf], map: "idx_students_cpf")
   @@index([enrollment_date], map: "idx_students_enrollment_date")
@@ -154,11 +155,36 @@ model User {
   created_at    DateTime?    @default(now()) @db.Timestamp(6)
   updated_at    DateTime?    @default(now()) @updatedAt @db.Timestamp(6)
   teacher       Teacher?     @relation(fields: [teacher_id], references: [id], onUpdate: NoAction)
+  belt_promotions BeltPromotion[]
 
   @@index([role], map: "idx_users_role")
   @@index([status], map: "idx_users_status")
   @@index([username], map: "idx_users_username")
   @@map("users")
+}
+
+model BeltPromotion {
+  id                String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  student_id        String              @db.Uuid
+  promoted_by       String              @db.Uuid
+  previous_belt     String?             @db.VarChar(50)
+  previous_degree   Int?                @default(0)
+  new_belt          String              @db.VarChar(50)
+  new_degree        Int                 @default(0)
+  promotion_date    DateTime            @default(now()) @db.Date
+  promotion_type    promotion_type      @default(regular)
+  requirements_met  Json?
+  notes             String?
+  certificate_url   String?             @db.VarChar(500)
+  created_at        DateTime?           @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?           @default(now()) @updatedAt @db.Timestamp(6)
+  student           Student             @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  promoted_by_user  User                @relation(fields: [promoted_by], references: [id], onUpdate: NoAction)
+
+  @@index([student_id], map: "idx_belt_promotions_student_id")
+  @@index([promotion_date], map: "idx_belt_promotions_date")
+  @@index([new_belt], map: "idx_belt_promotions_belt")
+  @@map("belt_promotions")
 }
 
 enum checkin_method {
@@ -211,4 +237,11 @@ enum user_role {
 enum user_status {
   active
   inactive
+}
+
+enum promotion_type {
+  regular
+  skip_degree
+  honorary
+  correction
 }

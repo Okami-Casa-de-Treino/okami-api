@@ -505,10 +505,161 @@ export class PaymentController {
   }
 
   async generateMonthly(request: Request): Promise<Response> {
-    return new Response(JSON.stringify({ success: true, message: "Monthly payments generated" }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" }
-    });
+    try {
+      const body = await request.json();
+      const { reference_month, due_day, month, year } = body as { 
+        reference_month?: string; 
+        due_day?: number;
+        month?: number;
+        year?: number;
+      };
+
+      // Support both formats: { reference_month: "2025-10-01" } and { month: 10, year: 2025 }
+      let referenceDate: Date;
+      if (reference_month) {
+        referenceDate = new Date(reference_month);
+      } else if (month !== undefined && year !== undefined) {
+        // month is 1-based in the request, but Date constructor expects 0-based
+        referenceDate = new Date(year, month - 1, 1);
+      } else {
+        referenceDate = new Date();
+      }
+      
+      const targetYear = referenceDate.getFullYear();
+      const targetMonth = referenceDate.getMonth(); // 0-based (0 = January, 9 = October)
+      
+      // Set reference month to first day of the month
+      const referenceMonth = new Date(targetYear, targetMonth, 1);
+      
+      // Set due date (default to 10th of the month)
+      const dueDayOfMonth = due_day || 10;
+      const dueDate = new Date(targetYear, targetMonth, dueDayOfMonth);
+
+      console.log(`🔍 Debug - Reference month: ${referenceMonth.toISOString()}`);
+      console.log(`🔍 Debug - Target year: ${targetYear}, Target month: ${targetMonth} (${targetMonth + 1})`);
+
+      // Find all active students
+      const activeStudents = await prisma.student.findMany({
+        where: {
+          status: 'active',
+          monthly_fee: {
+            not: null,
+            gt: 0
+          }
+        },
+        select: {
+          id: true,
+          full_name: true,
+          monthly_fee: true,
+          payments: {
+            where: {
+              reference_month: {
+                gte: new Date(targetYear, targetMonth, 1),
+                lt: new Date(targetYear, targetMonth + 1, 1)
+              }
+            },
+            select: {
+              id: true,
+              reference_month: true
+            }
+          }
+        }
+      });
+
+      console.log(`🔍 Debug - Found ${activeStudents.length} active students with monthly_fee`);
+      
+      // Filter students who don't have a payment for this month yet
+      const studentsWithoutPayment = activeStudents.filter(student => {
+        const hasPayment = student.payments.length > 0;
+        console.log(`🔍 Debug - Student ${student.full_name}: ${hasPayment ? 'HAS' : 'NO'} payment for ${targetYear}-${(targetMonth + 1).toString().padStart(2, '0')} (${student.payments.length} payments found)`);
+        return !hasPayment;
+      });
+
+      console.log(`🔍 Debug - Students without payment: ${studentsWithoutPayment.length}`);
+
+      if (studentsWithoutPayment.length === 0) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: "Nenhum pagamento foi gerado. Todos os alunos ativos já possuem pagamento para este mês.",
+            data: {
+              reference_month: referenceMonth.toISOString().split('T')[0],
+              due_date: dueDate.toISOString().split('T')[0],
+              total_active_students: activeStudents.length,
+              students_with_existing_payment: activeStudents.length - studentsWithoutPayment.length,
+              payments_generated: 0,
+              debug_info: {
+                target_year: targetYear,
+                target_month: targetMonth + 1,
+                students_with_payments: activeStudents.filter(s => s.payments.length > 0).map(s => ({
+                  name: s.full_name,
+                  payments_count: s.payments.length,
+                  payment_dates: s.payments.map(p => p.reference_month?.toISOString().split('T')[0])
+                }))
+              }
+            }
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      // Generate payments for students without payment for this month
+      const paymentsToCreate = studentsWithoutPayment.map(student => ({
+        student_id: student.id,
+        amount: student.monthly_fee!,
+        due_date: dueDate,
+        reference_month: referenceMonth,
+        status: 'pending' as const,
+        notes: `Mensalidade referente a ${referenceMonth.toLocaleDateString('pt-BR', { 
+          month: 'long', 
+          year: 'numeric' 
+        })}`
+      }));
+
+      // Create all payments in a single transaction
+      const createdPayments = await prisma.payment.createMany({
+        data: paymentsToCreate
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `${createdPayments.count} pagamentos mensais foram gerados com sucesso`,
+          data: {
+            reference_month: referenceMonth.toISOString().split('T')[0],
+            due_date: dueDate.toISOString().split('T')[0],
+            total_active_students: activeStudents.length,
+            students_with_existing_payment: activeStudents.length - studentsWithoutPayment.length,
+            payments_generated: createdPayments.count,
+            generated_for_students: studentsWithoutPayment.map(s => ({
+              id: s.id,
+              name: s.full_name,
+              amount: s.monthly_fee
+            }))
+          }
+        }),
+        {
+          status: 201,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+
+    } catch (error) {
+      console.error("Generate monthly payments error:", error);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Erro interno do servidor"
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
   }
 
   async markAsPaid(request: Request, id: string): Promise<Response> {

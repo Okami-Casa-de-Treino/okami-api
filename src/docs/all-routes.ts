@@ -242,11 +242,25 @@
  * @swagger
  * /api/classes/schedule:
  *   get:
- *     summary: Obter grade de horários
+ *     summary: Obter grade de horários semanal
  *     tags: [Classes]
+ *     parameters:
+ *       - in: query
+ *         name: teacher_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filtrar por professor específico
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, inactive]
+ *           default: active
+ *         description: Filtrar por status das aulas
  *     responses:
  *       200:
- *         description: Grade de horários semanal
+ *         description: Grade de horários organizada por dia da semana
  *         content:
  *           application/json:
  *             schema:
@@ -257,10 +271,50 @@
  *                   example: true
  *                 data:
  *                   type: object
- *                   additionalProperties:
- *                     type: array
- *                     items:
- *                       $ref: '#/components/schemas/Class'
+ *                   properties:
+ *                     schedule:
+ *                       type: object
+ *                       properties:
+ *                         Segunda-feira:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/ScheduleClass'
+ *                         Terça-feira:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/ScheduleClass'
+ *                         Quarta-feira:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/ScheduleClass'
+ *                         Quinta-feira:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/ScheduleClass'
+ *                         Sexta-feira:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/ScheduleClass'
+ *                         Sábado:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/ScheduleClass'
+ *                         Domingo:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/ScheduleClass'
+ *                     summary:
+ *                       type: object
+ *                       properties:
+ *                         total_classes:
+ *                           type: integer
+ *                           example: 15
+ *                         days_with_classes:
+ *                           type: integer
+ *                           example: 5
+ *                         teachers_count:
+ *                           type: integer
+ *                           example: 3
  */
 
 /**

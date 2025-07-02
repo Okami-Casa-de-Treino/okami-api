@@ -297,18 +297,9 @@ export class APIRouter {
       }
     }
 
-    // Class schedule - TODO: Implement getSchedule method
+    // Class schedule
     if (path === "/api/classes/schedule" && method === "GET") {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Endpoint não implementado"
-        }),
-        {
-          status: 501,
-          headers: { "Content-Type": "application/json" }
-        }
-      );
+      return await classController.getSchedule(request);
     }
 
     // Class by ID

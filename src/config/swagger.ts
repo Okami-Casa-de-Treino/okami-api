@@ -208,6 +208,32 @@ const swaggerDefinition = {
         },
       },
 
+      // Schedule Class (for schedule endpoint)
+      ScheduleClass: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          name: { type: 'string', example: 'Karate Infantil' },
+          description: { type: 'string', example: 'Aula de karate para crianças de 6 a 12 anos' },
+          start_time: { type: 'string', example: '18:00:00' },
+          end_time: { type: 'string', example: '19:00:00' },
+          max_students: { type: 'integer', example: 20 },
+          current_students: { type: 'integer', example: 15 },
+          belt_requirement: { type: 'string', example: 'Faixa Branca ou superior' },
+          age_group: { type: 'string', example: 'Infantil' },
+          status: { type: 'string', enum: ['active', 'inactive'] },
+          teacher: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              full_name: { type: 'string', example: 'Sensei Takeshi' },
+              belt: { type: 'string', example: 'Faixa Preta' },
+              belt_degree: { type: 'integer', example: 5 }
+            }
+          }
+        },
+      },
+
       // Checkin
       Checkin: {
         type: 'object',
