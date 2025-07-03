@@ -1,6 +1,7 @@
 import { prisma } from "../config/prisma.js";
-import { validateUUID } from "../utils/validation.js";
+import { validateUUID, paginationSchema } from "../utils/validation.js";
 import { z } from "zod";
+import { Prisma } from "../generated/prisma/index.js";
 
 // Belt promotion validation schema
 export const createBeltPromotionSchema = z.object({
@@ -261,35 +262,75 @@ export class BeltController {
         );
       }
 
-      // For now, just update the student's belt until we migrate the schema
-      const updatedStudent = await prisma.student.update({
-        where: { id: promotionData.student_id },
-        data: {
-          belt: promotionData.new_belt,
-          belt_degree: promotionData.new_degree
-        },
-        select: {
-          id: true,
-          full_name: true,
-          belt: true,
-          belt_degree: true,
-          email: true,
-          phone: true
-        }
+      // Use transaction to update student and create promotion record
+      const result = await prisma.$transaction(async (tx) => {
+        // Create promotion record
+        const promotion = await tx.beltPromotion.create({
+          data: {
+            student_id: promotionData.student_id,
+            promoted_by: promotedBy,
+            previous_belt: student.belt,
+            previous_degree: student.belt_degree,
+            new_belt: promotionData.new_belt,
+            new_degree: promotionData.new_degree,
+            promotion_date: promotionData.promotion_date ? new Date(promotionData.promotion_date) : new Date(),
+            promotion_type: promotionData.promotion_type || 'regular',
+            requirements_met: promotionData.requirements_met as any,
+            notes: promotionData.notes || null,
+            certificate_url: promotionData.certificate_url || null
+          },
+          include: {
+            promoted_by_user: {
+              select: {
+                username: true,
+                role: true,
+                teacher: {
+                  select: {
+                    full_name: true
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        // Update student's current belt
+        const updatedStudent = await tx.student.update({
+          where: { id: promotionData.student_id },
+          data: {
+            belt: promotionData.new_belt,
+            belt_degree: promotionData.new_degree
+          },
+          select: {
+            id: true,
+            full_name: true,
+            belt: true,
+            belt_degree: true,
+            email: true,
+            phone: true
+          }
+        });
+
+        return { promotion, updatedStudent };
       });
 
       return new Response(
         JSON.stringify({
           success: true,
           data: {
-            student: updatedStudent,
+            student: result.updatedStudent,
             promotion: {
-              previous_belt: student.belt,
-              previous_degree: student.belt_degree,
-              new_belt: promotionData.new_belt,
-              new_degree: promotionData.new_degree,
-              promotion_date: new Date().toISOString(),
-              notes: promotionData.notes
+              id: result.promotion.id,
+              previous_belt: result.promotion.previous_belt,
+              previous_degree: result.promotion.previous_degree,
+              new_belt: result.promotion.new_belt,
+              new_degree: result.promotion.new_degree,
+              promotion_date: result.promotion.promotion_date,
+              promotion_type: result.promotion.promotion_type,
+              requirements_met: result.promotion.requirements_met,
+              notes: result.promotion.notes,
+              certificate_url: result.promotion.certificate_url,
+              promoted_by: (result.promotion as any).promoted_by_user.teacher?.full_name || (result.promotion as any).promoted_by_user.username
             }
           },
           message: `${student.full_name} foi promovido(a) para ${promotionData.new_belt} ${promotionData.new_degree}º grau com sucesso`
@@ -330,7 +371,7 @@ export class BeltController {
         );
       }
 
-      // Check if student exists
+      // Get student with promotion history
       const student = await prisma.student.findUnique({
         where: { id: studentId },
         select: {
@@ -339,7 +380,28 @@ export class BeltController {
           belt: true,
           belt_degree: true,
           enrollment_date: true,
-          status: true
+          status: true,
+          belt_promotions: {
+            orderBy: {
+              promotion_date: 'desc'
+            },
+            include: {
+              promoted_by_user: {
+                select: {
+                  id: true,
+                  username: true,
+                  role: true,
+                  teacher: {
+                    select: {
+                      full_name: true,
+                      belt: true,
+                      belt_degree: true
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       });
 
@@ -362,6 +424,12 @@ export class BeltController {
         ? Math.floor((new Date().getTime() - enrollmentDate.getTime()) / (1000 * 60 * 60 * 24))
         : null;
 
+      // Calculate time at current belt
+      const lastPromotion = student.belt_promotions[0]; // Most recent promotion
+      const timeAtCurrentBelt = lastPromotion 
+        ? Math.floor((new Date().getTime() - new Date(lastPromotion.promotion_date).getTime()) / (1000 * 60 * 60 * 24))
+        : daysSinceEnrollment;
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -376,9 +444,31 @@ export class BeltController {
             },
             progress: {
               days_since_enrollment: daysSinceEnrollment,
-              current_level: `${student.belt || 'Sem faixa'} - ${student.belt_degree || 0}º grau`
+              current_level: `${student.belt || 'Sem faixa'} - ${student.belt_degree || 0}º grau`,
+              total_promotions: student.belt_promotions.length,
+              last_promotion_date: lastPromotion?.promotion_date || null,
+              time_at_current_belt: timeAtCurrentBelt
             },
-            message: "Histórico completo de promoções estará disponível após migração do banco de dados"
+            promotion_history: student.belt_promotions.map(promotion => ({
+              id: promotion.id,
+              previous_belt: promotion.previous_belt,
+              previous_degree: promotion.previous_degree,
+              new_belt: promotion.new_belt,
+              new_degree: promotion.new_degree,
+              promotion_date: promotion.promotion_date,
+              promotion_type: promotion.promotion_type,
+              requirements_met: promotion.requirements_met,
+              notes: promotion.notes,
+              certificate_url: promotion.certificate_url,
+              promoted_by_user: {
+                id: promotion.promoted_by_user.id,
+                username: promotion.promoted_by_user.username,
+                role: promotion.promoted_by_user.role,
+                teacher_name: promotion.promoted_by_user.teacher?.full_name || null,
+                teacher_belt: promotion.promoted_by_user.teacher?.belt || null,
+                teacher_degree: promotion.promoted_by_user.teacher?.belt_degree || null
+              }
+            }))
           }
         }),
         {
@@ -417,6 +507,52 @@ export class BeltController {
 
       const totalActiveStudents = beltDistribution.reduce((sum, item) => sum + item._count.id, 0);
 
+      // Get recent promotions (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const recentPromotions = await prisma.beltPromotion.findMany({
+        where: {
+          promotion_date: {
+            gte: thirtyDaysAgo
+          }
+        },
+        orderBy: {
+          promotion_date: 'desc'
+        },
+        take: 10,
+        include: {
+          student: {
+            select: {
+              full_name: true
+            }
+          },
+          promoted_by_user: {
+            select: {
+              username: true,
+              teacher: {
+                select: {
+                  full_name: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Get promotions count for this month
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const promotionsThisMonth = await prisma.beltPromotion.count({
+        where: {
+          promotion_date: {
+            gte: startOfMonth
+          }
+        }
+      });
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -429,9 +565,20 @@ export class BeltController {
             })),
             summary: {
               total_active_students: totalActiveStudents,
-              unique_belt_levels: beltDistribution.length
+              unique_belt_levels: beltDistribution.length,
+              recent_promotions: recentPromotions.length,
+              promotions_this_month: promotionsThisMonth
             },
-            message: "Estatísticas detalhadas de promoções estarão disponíveis após migração do banco de dados"
+            recent_promotions: recentPromotions.map(promotion => ({
+              student_name: promotion.student.full_name,
+              previous_belt: promotion.previous_belt,
+              previous_degree: promotion.previous_degree,
+              new_belt: promotion.new_belt,
+              new_degree: promotion.new_degree,
+              promotion_date: promotion.promotion_date,
+              promotion_type: promotion.promotion_type,
+              promoted_by: promotion.promoted_by_user.teacher?.full_name || promotion.promoted_by_user.username
+            }))
           }
         }),
         {

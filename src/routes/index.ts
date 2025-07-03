@@ -6,6 +6,7 @@ import { CheckinController } from "../controllers/checkinController.js";
 import { PaymentController } from "../controllers/paymentController.js";
 import { AuthController } from "../controllers/authController.js";
 import { ReportController } from "../controllers/reportController.js";
+import { BeltController } from "../controllers/beltController.js";
 
 // CORS headers
 const corsHeaders = {
@@ -70,6 +71,7 @@ const checkinController = new CheckinController();
 const paymentController = new PaymentController();
 const authController = new AuthController();
 const reportController = new ReportController();
+const beltController = new BeltController();
 
 // Router class
 export class APIRouter {
@@ -137,6 +139,10 @@ export class APIRouter {
       // Report routes
       const reportRoutes = await this.handleReportRoutes(request, path, method, user);
       if (reportRoutes) return reportRoutes;
+
+      // Belt routes
+      const beltRoutes = await this.handleBeltRoutes(request, path, method, user);
+      if (beltRoutes) return beltRoutes;
 
       return null; // No route matched
 
@@ -459,6 +465,44 @@ export class APIRouter {
         return await reportController.getStudents(request);
       case "/api/reports/classes":
         return await reportController.getClasses(request);
+    }
+
+    return null;
+  }
+
+  private async handleBeltRoutes(request: Request, path: string, method: string, user: any): Promise<Response | null> {
+    // Belt promotions collection
+    if (path === "/api/belts/promotions") {
+      switch (method) {
+        case "GET":
+          return await beltController.getAll(request);
+      }
+    }
+
+    // Promote student
+    if (path === "/api/belts/promote" && method === "POST") {
+      const { error } = await requireAuth(request, ["admin", "teacher"]);
+      if (error) return error;
+      return await beltController.promoteStudent(request, user.id);
+    }
+
+    // Belt overview
+    if (path === "/api/belts/overview" && method === "GET") {
+      return await beltController.getBeltOverview(request);
+    }
+
+    // Belt promotion by ID
+    const promotionMatch = path.match(/^\/api\/belts\/promotions\/([a-f0-9-]+)$/);
+    if (promotionMatch && promotionMatch[1] && method === "GET") {
+      const promotionId = promotionMatch[1];
+      return await beltController.getById(request, promotionId);
+    }
+
+    // Student belt progress (already handled in student routes, but we can add it here too)
+    const studentProgressMatch = path.match(/^\/api\/students\/([a-f0-9-]+)\/belt-progress$/);
+    if (studentProgressMatch && studentProgressMatch[1] && method === "GET") {
+      const studentId = studentProgressMatch[1];
+      return await beltController.getStudentBeltProgress(request, studentId);
     }
 
     return null;
