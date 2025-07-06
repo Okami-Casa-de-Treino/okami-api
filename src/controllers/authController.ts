@@ -97,7 +97,11 @@ export class AuthController {
       // If no staff user found, try to find a student
       const student = await prisma.student.findFirst({
         where: {
-          username,
+          OR: [
+            { phone: username },
+            { cpf: username },
+            { email: username }
+          ],
           status: 'active'
         } as any,
         select: {
@@ -119,9 +123,7 @@ export class AuthController {
           enrollment_date: true,
           monthly_fee: true,
           status: true,
-          // username and password_hash are not in the type, but are in the DB
-          // @ts-ignore
-          username: true,
+          // password_hash is not in the type, but is in the DB
           // @ts-ignore
           password_hash: true,
           created_at: true,
@@ -165,7 +167,6 @@ export class AuthController {
           enrollment_date: student.enrollment_date instanceof Date ? student.enrollment_date.toISOString() : (student.enrollment_date ?? ''),
           monthly_fee: (student.monthly_fee && typeof (student.monthly_fee as any).toNumber === 'function') ? (student.monthly_fee as any).toNumber() : (student.monthly_fee ?? null),
           status: (student.status ?? 'active') as 'active' | 'inactive' | 'suspended',
-          username: (student as any).username ?? '',
           created_at: student.created_at instanceof Date ? student.created_at.toISOString() : (student.created_at ?? ''),
           updated_at: student.updated_at instanceof Date ? student.updated_at.toISOString() : (student.updated_at ?? ''),
           role: 'student' as const

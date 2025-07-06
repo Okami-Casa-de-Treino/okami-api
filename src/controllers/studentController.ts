@@ -2,6 +2,7 @@ import { prisma } from "../config/prisma.js";
 import { createStudentSchema, updateStudentSchema, paginationSchema, validateUUID } from "../utils/validation.js";
 import type { ApiResponse } from "../types/index.js";
 import type { Prisma } from "../generated/prisma/index.js";
+import bcrypt from "bcryptjs";
 
 export class StudentController {
   async getAll(request: Request): Promise<Response> {
@@ -203,6 +204,13 @@ export class StudentController {
 
       const studentData = validation.data;
 
+      // Hash password if provided
+      let passwordHash: string | undefined;
+      if (studentData.password) {
+        const saltRounds = 12;
+        passwordHash = await bcrypt.hash(studentData.password, saltRounds);
+      }
+
       try {
         const newStudent = await prisma.student.create({
           data: {
@@ -219,8 +227,9 @@ export class StudentController {
             emergency_contact_phone: studentData.emergency_contact_phone,
             emergency_contact_relationship: studentData.emergency_contact_relationship,
             medical_observations: studentData.medical_observations,
-            monthly_fee: studentData.monthly_fee
-          },
+            monthly_fee: studentData.monthly_fee,
+            password_hash: passwordHash
+          } as any,
           select: {
             id: true,
             full_name: true,

@@ -19,6 +19,8 @@ export const createStudentSchema = z.object({
     z.number().min(0, "Mensalidade não pode ser negativa"),
     z.null()
   ]).optional(),
+  // Authentication field (optional)
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").optional(),
 });
 
 export const updateStudentSchema = createStudentSchema.partial();
