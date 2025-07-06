@@ -33,6 +33,7 @@ services:
       DATABASE_URL: postgres://okami_user:okami_password@postgres:5432/okami_gym
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       PORT: 3000
+      CORS_ORIGIN: http://localhost:5173
     ports:
       - "3000:3000"
     depends_on:
@@ -45,6 +46,7 @@ services:
       - ./package.json:/app/package.json:ro
       - ./tsconfig.json:/app/tsconfig.json:ro
       - ./prisma:/app/prisma:ro
+      - ./uploads:/app/uploads
     command: sh -c "sleep 10 && bun run db:seed:users && bun --hot src/index.ts"
     restart: unless-stopped
 

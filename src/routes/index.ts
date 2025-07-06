@@ -7,13 +7,16 @@ import { PaymentController } from "../controllers/paymentController.js";
 import { AuthController } from "../controllers/authController.js";
 import { ReportController } from "../controllers/reportController.js";
 import { BeltController } from "../controllers/beltController.js";
+import { VideoController } from "../controllers/videoController.js";
+import { ModuleController } from "../controllers/moduleController.js";
 
 // CORS headers
 const corsHeaders = {
-  "Access-Control-Allow-Origin": process.env.CORS_ORIGIN || "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Origin": process.env.CORS_ORIGIN || "http://localhost:5173",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
   "Access-Control-Max-Age": "86400",
+  "Access-Control-Allow-Credentials": "true",
 };
 
 // Helper function to add CORS headers to response
@@ -44,7 +47,7 @@ async function requireAuth(request: Request, roles?: string[]): Promise<{ user: 
     };
   }
 
-  if (roles && !roles.includes(user.role)) {
+  if (roles && 'role' in user && !roles.includes(user.role)) {
     return {
       user: null,
       error: new Response(
@@ -72,6 +75,8 @@ const paymentController = new PaymentController();
 const authController = new AuthController();
 const reportController = new ReportController();
 const beltController = new BeltController();
+const videoController = new VideoController();
+const moduleController = new ModuleController();
 
 // Router class
 export class APIRouter {
@@ -116,6 +121,10 @@ export class APIRouter {
         return await authController.logout(request);
       }
 
+      // Student authentication routes
+      const studentAuthRoutes = await this.handleStudentAuthRoutes(request, path, method, user);
+      if (studentAuthRoutes) return studentAuthRoutes;
+
       // Student routes
       const studentRoutes = await this.handleStudentRoutes(request, path, method, user);
       if (studentRoutes) return studentRoutes;
@@ -143,6 +152,14 @@ export class APIRouter {
       // Belt routes
       const beltRoutes = await this.handleBeltRoutes(request, path, method, user);
       if (beltRoutes) return beltRoutes;
+
+      // Video routes
+      const videoRoutes = await this.handleVideoRoutes(request, path, method, user);
+      if (videoRoutes) return videoRoutes;
+
+      // Module routes
+      const moduleRoutes = await this.handleModuleRoutes(request, path, method, user);
+      if (moduleRoutes) return moduleRoutes;
 
       return null; // No route matched
 
@@ -175,6 +192,24 @@ export class APIRouter {
         headers: { "Content-Type": "application/json" } 
       }
     );
+  }
+
+  private async handleStudentAuthRoutes(request: Request, path: string, method: string, user: any): Promise<Response | null> {
+    // Student profile - only accessible by the student themselves
+    if (path === "/api/student/profile" && method === "GET") {
+      const { error } = await requireAuth(request, ["student"]);
+      if (error) return error;
+      return await authController.getStudentProfile(request, user);
+    }
+
+    // Student password change
+    if (path === "/api/student/change-password" && method === "POST") {
+      const { error } = await requireAuth(request, ["student"]);
+      if (error) return error;
+      return await authController.changeStudentPassword(request, user);
+    }
+
+    return null;
   }
 
   private async handleStudentRoutes(request: Request, path: string, method: string, user: any): Promise<Response | null> {
@@ -503,6 +538,100 @@ export class APIRouter {
     if (studentProgressMatch && studentProgressMatch[1] && method === "GET") {
       const studentId = studentProgressMatch[1];
       return await beltController.getStudentBeltProgress(request, studentId);
+    }
+
+    return null;
+  }
+
+  private async handleVideoRoutes(request: Request, path: string, method: string, user: any): Promise<Response | null> {
+    // Videos collection
+    if (path === "/api/videos") {
+      switch (method) {
+        case "GET":
+          return await videoController.getAll(request);
+        case "POST":
+          const { error } = await requireAuth(request, ["admin", "teacher"]);
+          if (error) return error;
+          return await videoController.create(request);
+      }
+    }
+
+    // Videos by module
+    const videoModuleMatch = path.match(/^\/api\/videos\/module\/([a-f0-9-]+)$/);
+    if (videoModuleMatch && videoModuleMatch[1] && method === "GET") {
+      const moduleId = videoModuleMatch[1];
+      return await videoController.getByModule(request, moduleId);
+    }
+
+    // Videos by class
+    const videoClassMatch = path.match(/^\/api\/videos\/class\/([a-f0-9-]+)$/);
+    if (videoClassMatch && videoClassMatch[1] && method === "GET") {
+      const classId = videoClassMatch[1];
+      return await videoController.getByClass(request, classId);
+    }
+
+    // Free videos (not assigned to any class)
+    if (path === "/api/videos/free" && method === "GET") {
+      return await videoController.getFreeVideos(request);
+    }
+
+    // File upload
+    if (path === "/api/videos/upload" && method === "POST") {
+      const { error } = await requireAuth(request, ["admin", "teacher"]);
+      if (error) return error;
+      return await videoController.uploadFile(request);
+    }
+
+    // Video by ID
+    const videoMatch = path.match(/^\/api\/videos\/([a-f0-9-]+)$/);
+    if (videoMatch && videoMatch[1]) {
+      const videoId = videoMatch[1];
+      switch (method) {
+        case "GET":
+          return await videoController.getById(request, videoId);
+        case "PUT":
+          const { error: updateError } = await requireAuth(request, ["admin", "teacher"]);
+          if (updateError) return updateError;
+          return await videoController.update(request, videoId);
+        case "DELETE":
+          const { error: deleteError } = await requireAuth(request, ["admin", "teacher"]);
+          if (deleteError) return deleteError;
+          return await videoController.delete(request, videoId);
+      }
+    }
+
+    return null;
+  }
+
+  private async handleModuleRoutes(request: Request, path: string, method: string, user: any): Promise<Response | null> {
+    // Modules collection
+    if (path === "/api/modules") {
+      switch (method) {
+        case "GET":
+          return await moduleController.getAll(request);
+        case "POST":
+          const { error } = await requireAuth(request, ["admin"]);
+          if (error) return error;
+          return await moduleController.create(request);
+      }
+    }
+
+    // Module by ID
+    const moduleMatch = path.match(/^\/api\/modules\/([a-f0-9-]+)$/);
+    if (moduleMatch && moduleMatch[1]) {
+      const moduleId = moduleMatch[1];
+      switch (method) {
+        case "GET":
+          return await moduleController.getById(request, moduleId);
+        case "PUT":
+          const { error: updateError } = await requireAuth(request, ["admin"]);
+          if (updateError) return updateError;
+          return await moduleController.update(request, moduleId);
+        case "DELETE":
+          const { error: deleteError } = await requireAuth(request, ["admin"]);
+          if (deleteError) return deleteError;
+          return await moduleController.delete(request, moduleId);
+      }
     }
 
     return null;

@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
-import type { User } from "../types/index.js";
+import type { User, Student } from "../types/index.js";
 
 export interface AuthenticatedRequest extends Request {
-  user?: Omit<User, 'password_hash'>;
+  user?: Omit<User, 'password_hash'> | Omit<Student, 'password_hash'>;
 }
 
 export interface JWTPayload {
@@ -16,10 +16,10 @@ export interface JWTPayload {
 export class AuthMiddleware {
   private static JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key-change-in-production";
 
-  static generateToken(user: Omit<User, 'password_hash'>): string {
+  static generateToken(user: Omit<User, 'password_hash'> | (Omit<Student, 'password_hash'> & { role: 'student' })): string {
     const payload: JWTPayload = {
       userId: user.id,
-      username: user.username,
+      username: user.username || '',
       role: user.role,
     };
 
@@ -71,16 +71,30 @@ export class AuthMiddleware {
       }
 
       // Attach user info to request (this would need to be handled differently in Bun.serve)
-      req.user = {
-        id: payload.userId,
-        username: payload.username,
-        role: payload.role as 'admin' | 'teacher' | 'receptionist',
-        email: undefined,
-        teacher_id: undefined,
-        status: 'active',
-        created_at: '',
-        updated_at: ''
-      };
+      if (payload.role === 'student') {
+        req.user = {
+          id: payload.userId,
+          username: payload.username,
+          role: payload.role as 'student',
+          full_name: '',
+          birth_date: new Date().toISOString(),
+          belt_degree: 0,
+          status: 'active',
+          created_at: '',
+          updated_at: ''
+        } as Omit<Student, 'password_hash'>;
+      } else {
+        req.user = {
+          id: payload.userId,
+          username: payload.username,
+          role: payload.role as 'admin' | 'teacher' | 'receptionist',
+          email: undefined,
+          teacher_id: undefined,
+          status: 'active',
+          created_at: '',
+          updated_at: ''
+        } as Omit<User, 'password_hash'>;
+      }
 
       return; // Continue to next handler
     };
@@ -126,8 +140,16 @@ export class AuthMiddleware {
     return this.requireRole(['admin', 'teacher']);
   }
 
+  static requireStudent() {
+    return this.requireRole(['student']);
+  }
+
+  static requireStaff() {
+    return this.requireRole(['admin', 'teacher', 'receptionist']);
+  }
+
   // Helper function to extract user from request in route handlers
-  static async getUserFromRequest(req: Request): Promise<Omit<User, 'password_hash'> | null> {
+  static async getUserFromRequest(req: Request): Promise<Omit<User, 'password_hash'> | Omit<Student, 'password_hash'> | null> {
     const authHeader = req.headers.get("authorization");
     
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -146,15 +168,29 @@ export class AuthMiddleware {
       return null;
     }
 
-    return {
-      id: payload.userId,
-      username: payload.username,
-      role: payload.role as 'admin' | 'teacher' | 'receptionist',
-      email: undefined,
-      teacher_id: undefined,
-      status: 'active' as 'active' | 'inactive',
-      created_at: '',
-      updated_at: ''
-    };
+    if (payload.role === 'student') {
+      return {
+        id: payload.userId,
+        username: payload.username,
+        role: payload.role as 'student',
+        full_name: '',
+        birth_date: new Date().toISOString(),
+        belt_degree: 0,
+        status: 'active' as 'active' | 'inactive' | 'suspended',
+        created_at: '',
+        updated_at: ''
+      } as Omit<Student, 'password_hash'>;
+    } else {
+      return {
+        id: payload.userId,
+        username: payload.username,
+        role: payload.role as 'admin' | 'teacher' | 'receptionist',
+        email: undefined,
+        teacher_id: undefined,
+        status: 'active' as 'active' | 'inactive',
+        created_at: '',
+        updated_at: ''
+      } as Omit<User, 'password_hash'>;
+    }
   }
 } 

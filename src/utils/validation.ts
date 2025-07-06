@@ -188,4 +188,49 @@ export function cleanPhone(phone: string | undefined): string {
 export function cleanCPF(cpf: string | undefined): string {
   if (!cpf) return '';
   return cpf.replace(/[^\d]/g, '');
-} 
+}
+
+// Video validation schemas
+export const createVideoSchema = z.object({
+  title: z.string().min(1, "Título deve ter pelo menos 1 caractere").max(100, "Título deve ter no máximo 100 caracteres"),
+  description: z.string().optional(),
+  file_url: z.string().url("URL do arquivo deve ser válida").max(500, "URL do arquivo deve ter no máximo 500 caracteres"),
+  thumbnail_url: z.string().optional().refine((val): val is string => !val || (/^https?:\/\/.+/.test(val) && val.length <= 500), "URL da thumbnail deve ser válida e ter no máximo 500 caracteres"),
+  module_id: z.string().refine((val): val is string => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val), "ID do módulo deve ser um UUID válido"),
+  assigned_class_id: z.string().optional().refine((val): val is string => !val || /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val), "ID da aula deve ser um UUID válido"),
+  duration: z.number().int().positive("Duração deve ser um número positivo").optional(),
+  file_size: z.number().int().positive("Tamanho do arquivo deve ser um número positivo").optional(),
+  mime_type: z.string().max(100, "Tipo MIME deve ter no máximo 100 caracteres").optional(),
+});
+
+export const updateVideoSchema = z.object({
+  title: z.string().min(1, "Título deve ter pelo menos 1 caractere").max(100, "Título deve ter no máximo 100 caracteres").optional(),
+  description: z.string().optional(),
+  file_url: z.string().url("URL do arquivo deve ser válida").max(500, "URL do arquivo deve ter no máximo 500 caracteres").optional(),
+  thumbnail_url: z.string().optional().refine((val): val is string => !val || (/^https?:\/\/.+/.test(val) && val.length <= 500), "URL da thumbnail deve ser válida e ter no máximo 500 caracteres"),
+  module_id: z.string().refine((val): val is string => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val), "ID do módulo deve ser um UUID válido").optional(),
+  assigned_class_id: z.string().optional().refine((val): val is string => !val || /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val), "ID da aula deve ser um UUID válido"),
+  duration: z.number().int().positive("Duração deve ser um número positivo").optional(),
+  file_size: z.number().int().positive("Tamanho do arquivo deve ser um número positivo").optional(),
+  mime_type: z.string().max(100, "Tipo MIME deve ter no máximo 100 caracteres").optional(),
+});
+
+export const videoQuerySchema = z.object({
+  page: z.string().optional().default("1").transform(val => parseInt(val) || 1),
+  limit: z.string().optional().default("10").transform(val => Math.min(parseInt(val) || 10, 100)),
+  search: z.string().optional(),
+  module_id: z.string().optional().refine((val): val is string => !val || /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val), "ID do módulo deve ser um UUID válido"),
+  assigned_class_id: z.string().optional().refine((val): val is string => !val || /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val), "ID da aula deve ser um UUID válido"),
+  sort_by: z.enum(["title", "upload_date", "duration"]).optional().default("upload_date"),
+  sort_order: z.enum(["asc", "desc"]).optional().default("desc"),
+});
+
+// Module validation schemas
+export const createModuleSchema = z.object({
+  name: z.string().min(1, "Nome deve ter pelo menos 1 caractere").max(50, "Nome deve ter no máximo 50 caracteres"),
+  description: z.string().max(200, "Descrição deve ter no máximo 200 caracteres").optional(),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor deve estar no formato hexadecimal (#RRGGBB)").default("#3B82F6"),
+  order: z.number().int().min(0, "Ordem deve ser um número não negativo").default(0),
+});
+
+export const updateModuleSchema = createModuleSchema.partial(); 

@@ -1,3 +1,6 @@
+-- Create extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- CreateEnum
 CREATE TYPE "checkin_method" AS ENUM ('manual', 'qr_code', 'app');
 

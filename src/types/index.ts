@@ -17,6 +17,8 @@ export interface Student {
   enrollment_date: string;
   monthly_fee?: number | null;
   status: 'active' | 'inactive' | 'suspended';
+  username?: string;
+  password_hash?: string;
   created_at: string;
   updated_at: string;
 }
@@ -94,7 +96,7 @@ export interface User {
   username: string;
   email?: string;
   password_hash: string;
-  role: 'admin' | 'teacher' | 'receptionist';
+  role: 'admin' | 'teacher' | 'receptionist' | 'student';
   teacher_id?: string;
   status: 'active' | 'inactive';
   created_at: string;
@@ -166,7 +168,12 @@ export interface AuthRequest {
 
 export interface AuthResponse {
   token: string;
-  user: Omit<User, 'password_hash'>;
+  user: Omit<User, 'password_hash'> | Omit<Student, 'password_hash'>;
+}
+
+export interface StudentAuthResponse {
+  token: string;
+  student: Omit<Student, 'password_hash'>;
 }
 
 export interface ApiResponse<T = any> {

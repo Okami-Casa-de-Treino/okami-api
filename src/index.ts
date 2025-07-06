@@ -11,10 +11,11 @@ const PORT = process.env.PORT || 3000;
 
 // CORS headers
 const corsHeaders = {
-  "Access-Control-Allow-Origin": process.env.CORS_ORIGIN || "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Origin": process.env.CORS_ORIGIN || "http://localhost:5173",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
   "Access-Control-Max-Age": "86400",
+  "Access-Control-Allow-Credentials": "true",
 };
 
 // Helper function to add CORS headers to response
@@ -55,6 +56,29 @@ const server = Bun.serve({
 
       if (path === "/docs") {
         return SwaggerHandler.handleSwaggerRedirect();
+      }
+
+      // Serve static files (uploads)
+      if (path.startsWith('/uploads/')) {
+        const filePath = path.replace('/uploads/', '');
+        const fullPath = `./uploads/${filePath}`;
+        
+        try {
+          const file = Bun.file(fullPath);
+          const exists = await file.exists();
+          
+          if (exists) {
+            const response = new Response(file, {
+              headers: {
+                'Content-Type': file.type || 'application/octet-stream',
+                'Cache-Control': 'public, max-age=31536000' // Cache for 1 year
+              }
+            });
+            return addCORSHeaders(response);
+          }
+        } catch (error) {
+          console.warn('Error serving static file:', error);
+        }
       }
 
       // Try to handle with API router
