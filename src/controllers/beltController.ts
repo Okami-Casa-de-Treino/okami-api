@@ -11,7 +11,18 @@ export const createBeltPromotionSchema = z.object({
   promotion_type: z.enum(["regular", "skip_degree", "honorary", "correction"]).optional(),
   requirements_met: z.record(z.boolean()).optional(),
   notes: z.string().optional(),
-  certificate_url: z.string().url("URL do certificado deve ser válida").optional(),
+  certificate_url: z.string().url("URL do certificado deve ser válida").optional().or(z.literal("")).or(z.null()),
+  promotion_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
+});
+
+// Update belt promotion validation schema
+export const updateBeltPromotionSchema = z.object({
+  new_belt: z.string().min(1, "Nova faixa é obrigatória").optional(),
+  new_degree: z.number().int().min(0).max(10, "Grau deve estar entre 0 e 10").optional(),
+  promotion_type: z.enum(["regular", "skip_degree", "honorary", "correction"]).optional(),
+  requirements_met: z.record(z.boolean()).optional(),
+  notes: z.string().optional(),
+  certificate_url: z.string().url("URL do certificado deve ser válida").optional().or(z.literal("")).or(z.null()),
   promotion_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
 });
 
@@ -277,7 +288,7 @@ export class BeltController {
             promotion_type: promotionData.promotion_type || 'regular',
             requirements_met: promotionData.requirements_met as any,
             notes: promotionData.notes || null,
-            certificate_url: promotionData.certificate_url || null
+            certificate_url: promotionData.certificate_url === "" ? null : (promotionData.certificate_url || null)
           },
           include: {
             promoted_by_user: {
@@ -343,6 +354,293 @@ export class BeltController {
 
     } catch (error) {
       console.error("Promote student error:", error);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Erro interno do servidor"
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+  }
+
+  async updateBeltPromotion(request: Request, id: string): Promise<Response> {
+    try {
+      if (!validateUUID(id)) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "ID inválido"
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      const body = await request.json();
+      const validation = updateBeltPromotionSchema.safeParse(body);
+
+      if (!validation.success) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Dados inválidos",
+            details: validation.error.errors
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      const updateData = validation.data;
+
+      const promotion = await prisma.beltPromotion.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          student_id: true,
+          previous_belt: true,
+          previous_degree: true,
+          new_belt: true,
+          new_degree: true,
+          promotion_date: true,
+          promotion_type: true,
+          requirements_met: true,
+          notes: true,
+          certificate_url: true,
+          created_at: true,
+          updated_at: true
+        }
+      });
+
+      if (!promotion) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Promoção não encontrada"
+          }),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
+
+             // Build update data with proper type handling
+       const updateDataToSave: Prisma.BeltPromotionUpdateInput = {};
+       
+       if (updateData.new_belt !== undefined) updateDataToSave.new_belt = updateData.new_belt;
+       if (updateData.new_degree !== undefined) updateDataToSave.new_degree = updateData.new_degree;
+       if (updateData.promotion_type !== undefined) updateDataToSave.promotion_type = updateData.promotion_type;
+       if (updateData.requirements_met !== undefined) updateDataToSave.requirements_met = updateData.requirements_met as any;
+       if (updateData.notes !== undefined) updateDataToSave.notes = updateData.notes;
+       if (updateData.certificate_url !== undefined) {
+         // Handle empty string and null values
+         updateDataToSave.certificate_url = updateData.certificate_url === "" ? null : updateData.certificate_url;
+       }
+       if (updateData.promotion_date !== undefined) updateDataToSave.promotion_date = new Date(updateData.promotion_date);
+       
+       updateDataToSave.updated_at = new Date();
+
+       // Use transaction to update promotion and potentially update student's current belt
+       const result = await prisma.$transaction(async (tx) => {
+         // Update the promotion
+         const updatedPromotion = await tx.beltPromotion.update({
+           where: { id },
+           data: updateDataToSave,
+           include: {
+             student: {
+               select: {
+                 id: true,
+                 full_name: true,
+                 belt: true,
+                 belt_degree: true,
+                 email: true,
+                 phone: true
+               }
+             },
+             promoted_by_user: {
+               select: {
+                 id: true,
+                 username: true,
+                 role: true,
+                 teacher: {
+                   select: {
+                     full_name: true
+                   }
+                 }
+               }
+             }
+           }
+         });
+
+         // Check if this is the most recent promotion for the student
+         const mostRecentPromotion = await tx.beltPromotion.findFirst({
+           where: { student_id: promotion.student_id },
+           orderBy: { promotion_date: 'desc' }
+         });
+
+         // If this is the most recent promotion, update the student's current belt
+         if (mostRecentPromotion && mostRecentPromotion.id === id) {
+           await tx.student.update({
+             where: { id: promotion.student_id },
+             data: {
+               belt: updatedPromotion.new_belt,
+               belt_degree: updatedPromotion.new_degree
+             }
+           });
+         }
+
+         return updatedPromotion;
+       });
+
+       const updatedPromotion = result;
+
+       return new Response(
+         JSON.stringify({
+           success: true,
+           data: {
+             id: updatedPromotion.id,
+             student: (updatedPromotion as any).student,
+             previous_belt: updatedPromotion.previous_belt,
+             previous_degree: updatedPromotion.previous_degree,
+             new_belt: updatedPromotion.new_belt,
+             new_degree: updatedPromotion.new_degree,
+             promotion_date: updatedPromotion.promotion_date,
+             promotion_type: updatedPromotion.promotion_type,
+             requirements_met: updatedPromotion.requirements_met,
+             notes: updatedPromotion.notes,
+             certificate_url: updatedPromotion.certificate_url,
+             created_at: updatedPromotion.created_at,
+             updated_at: updatedPromotion.updated_at,
+             promoted_by: (updatedPromotion as any).promoted_by_user?.teacher?.full_name || (updatedPromotion as any).promoted_by_user?.username
+           },
+           message: "Promoção de faixa atualizada com sucesso"
+         }),
+         {
+           status: 200,
+           headers: { "Content-Type": "application/json" }
+         }
+       );
+
+    } catch (error) {
+      console.error("Update belt promotion error:", error);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Erro interno do servidor"
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+  }
+
+  async deleteBeltPromotion(request: Request, id: string): Promise<Response> {
+    try {
+      if (!validateUUID(id)) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "ID inválido"
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      // Check if promotion exists
+      const promotion = await prisma.beltPromotion.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          student_id: true,
+          new_belt: true,
+          new_degree: true,
+          promotion_date: true,
+          student: {
+            select: {
+              id: true,
+              full_name: true,
+              belt: true,
+              belt_degree: true
+            }
+          }
+        }
+      });
+
+      if (!promotion) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Promoção não encontrada"
+          }),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      // Use transaction to delete promotion and potentially update student's current belt
+      await prisma.$transaction(async (tx) => {
+        // Delete the promotion
+        await tx.beltPromotion.delete({
+          where: { id }
+        });
+
+        // Check if this was the most recent promotion for the student
+        const mostRecentPromotion = await tx.beltPromotion.findFirst({
+          where: { student_id: promotion.student_id },
+          orderBy: { promotion_date: 'desc' }
+        });
+
+        // If this was the most recent promotion, update the student's current belt
+        if (!mostRecentPromotion) {
+          // No more promotions, reset student to no belt
+          await tx.student.update({
+            where: { id: promotion.student_id },
+            data: {
+              belt: null,
+              belt_degree: null
+            }
+          });
+        } else {
+          // Update student to the most recent promotion
+          await tx.student.update({
+            where: { id: promotion.student_id },
+            data: {
+              belt: mostRecentPromotion.new_belt,
+              belt_degree: mostRecentPromotion.new_degree
+            }
+          });
+        }
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Promoção de ${promotion.student.full_name} para ${promotion.new_belt} ${promotion.new_degree}º grau foi excluída com sucesso`
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+
+    } catch (error) {
+      console.error("Delete belt promotion error:", error);
       return new Response(
         JSON.stringify({
           success: false,

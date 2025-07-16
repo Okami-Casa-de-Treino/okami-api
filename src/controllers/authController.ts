@@ -268,55 +268,116 @@ export class AuthController {
 
   async getProfile(request: Request, user: any): Promise<Response> {
     try {
-      // Get fresh user data from database using Prisma
-      const userData = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: {
-          id: true,
-          username: true,
-          email: true,
-          role: true,
-          teacher_id: true,
-          status: true,
-          created_at: true,
-          updated_at: true,
-          teacher: {
-            select: {
-              id: true,
-              full_name: true,
-              email: true,
-              phone: true,
-              belt: true,
-              belt_degree: true,
-              specialties: true
-            }
+      // Check if user is a student or staff member
+      if (user.role === 'student') {
+        // Get fresh student data from database using Prisma
+        const studentData = await prisma.student.findUnique({
+          where: { id: user.id },
+          select: {
+            id: true,
+            full_name: true,
+            birth_date: true,
+            cpf: true,
+            rg: true,
+            belt: true,
+            belt_degree: true,
+            address: true,
+            phone: true,
+            email: true,
+            emergency_contact_name: true,
+            emergency_contact_phone: true,
+            emergency_contact_relationship: true,
+            medical_observations: true,
+            photo_url: true,
+            enrollment_date: true,
+            monthly_fee: true,
+            status: true,
+            created_at: true,
+            updated_at: true
           }
-        }
-      });
+        });
 
-      if (!userData) {
+        if (!studentData) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Estudante não encontrado"
+            }),
+            { 
+              status: 404, 
+              headers: { "Content-Type": "application/json" } 
+            }
+          );
+        }
+
+        // Convert monthly_fee to number if needed
+        const studentProfile = {
+          ...studentData,
+          role: 'student' as const,
+          monthly_fee: (studentData.monthly_fee && typeof (studentData.monthly_fee as any).toNumber === 'function') ? (studentData.monthly_fee as any).toNumber() : (studentData.monthly_fee ?? null)
+        };
+
         return new Response(
           JSON.stringify({
-            success: false,
-            error: "Usuário não encontrado"
+            success: true,
+            data: studentProfile
           }),
           { 
-            status: 404, 
+            status: 200, 
+            headers: { "Content-Type": "application/json" } 
+          }
+        );
+      } else {
+        // Get fresh staff user data from database using Prisma
+        const userData = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            role: true,
+            teacher_id: true,
+            status: true,
+            created_at: true,
+            updated_at: true,
+            teacher: {
+              select: {
+                id: true,
+                full_name: true,
+                email: true,
+                phone: true,
+                belt: true,
+                belt_degree: true,
+                specialties: true
+              }
+            }
+          }
+        });
+
+        if (!userData) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Usuário não encontrado"
+            }),
+            { 
+              status: 404, 
+              headers: { "Content-Type": "application/json" } 
+            }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: userData
+          }),
+          { 
+            status: 200, 
             headers: { "Content-Type": "application/json" } 
           }
         );
       }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          data: userData
-        }),
-        { 
-          status: 200, 
-          headers: { "Content-Type": "application/json" } 
-        }
-      );
 
     } catch (error) {
       console.error("Get profile error:", error);
@@ -406,6 +467,7 @@ export class AuthController {
       // Convert monthly_fee to number if needed
       const studentProfile = {
         ...studentData,
+        role: 'student' as const,
         monthly_fee: (studentData.monthly_fee && typeof (studentData.monthly_fee as any).toNumber === 'function') ? (studentData.monthly_fee as any).toNumber() : (studentData.monthly_fee ?? null)
       };
 

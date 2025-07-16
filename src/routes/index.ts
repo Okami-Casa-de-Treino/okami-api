@@ -9,6 +9,7 @@ import { ReportController } from "../controllers/reportController.js";
 import { BeltController } from "../controllers/beltController.js";
 import { VideoController } from "../controllers/videoController.js";
 import { ModuleController } from "../controllers/moduleController.js";
+import { ExpenseController } from "../controllers/expenseController.js";
 
 // CORS headers
 const corsHeaders = {
@@ -77,6 +78,7 @@ const reportController = new ReportController();
 const beltController = new BeltController();
 const videoController = new VideoController();
 const moduleController = new ModuleController();
+const expenseController = new ExpenseController();
 
 // Router class
 export class APIRouter {
@@ -160,6 +162,10 @@ export class APIRouter {
       // Module routes
       const moduleRoutes = await this.handleModuleRoutes(request, path, method, user);
       if (moduleRoutes) return moduleRoutes;
+
+      // Expense routes
+      const expenseRoutes = await this.handleExpenseRoutes(request, path, method, user);
+      if (expenseRoutes) return expenseRoutes;
 
       return null; // No route matched
 
@@ -528,9 +534,20 @@ export class APIRouter {
 
     // Belt promotion by ID
     const promotionMatch = path.match(/^\/api\/belts\/promotions\/([a-f0-9-]+)$/);
-    if (promotionMatch && promotionMatch[1] && method === "GET") {
+    if (promotionMatch && promotionMatch[1]) {
       const promotionId = promotionMatch[1];
-      return await beltController.getById(request, promotionId);
+      switch (method) {
+        case "GET":
+          return await beltController.getById(request, promotionId);
+        case "PUT":
+          const { error: updateError } = await requireAuth(request, ["admin", "teacher"]);
+          if (updateError) return updateError;
+          return await beltController.updateBeltPromotion(request, promotionId);
+        case "DELETE":
+          const { error: deleteError } = await requireAuth(request, ["admin"]);
+          if (deleteError) return deleteError;
+          return await beltController.deleteBeltPromotion(request, promotionId);
+      }
     }
 
     // Student belt progress (already handled in student routes, but we can add it here too)
@@ -631,6 +648,40 @@ export class APIRouter {
           const { error: deleteError } = await requireAuth(request, ["admin"]);
           if (deleteError) return deleteError;
           return await moduleController.delete(request, moduleId);
+      }
+    }
+
+    return null;
+  }
+
+  private async handleExpenseRoutes(request: Request, path: string, method: string, user: any): Promise<Response | null> {
+    // Expenses collection
+    if (path === "/api/expenses") {
+      switch (method) {
+        case "GET":
+          return await expenseController.getAll(request);
+        case "POST":
+          const { error } = await requireAuth(request, ["admin", "receptionist"]);
+          if (error) return error;
+          return await expenseController.create(request);
+      }
+    }
+
+    // Expense by ID
+    const expenseMatch = path.match(/^\/api\/expenses\/([a-f0-9-]+)$/);
+    if (expenseMatch && expenseMatch[1]) {
+      const expenseId = expenseMatch[1];
+      switch (method) {
+        case "GET":
+          return await expenseController.getById(request, expenseId);
+        case "PUT":
+          const { error: updateError } = await requireAuth(request, ["admin", "receptionist"]);
+          if (updateError) return updateError;
+          return await expenseController.update(request, expenseId);
+        case "DELETE":
+          const { error: deleteError } = await requireAuth(request, ["admin"]);
+          if (deleteError) return deleteError;
+          return await expenseController.delete(request, expenseId);
       }
     }
 

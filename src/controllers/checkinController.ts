@@ -313,14 +313,23 @@ export class CheckinController {
               gte: today,
               lt: tomorrow
             }
+          },
+          include: {
+            student: {
+              select: {
+                id: true,
+                full_name: true
+              }
+            }
           }
         });
 
         if (existingCheckin) {
+          const studentName = existingCheckin.student?.full_name || "Aluno";
           return new Response(
             JSON.stringify({
               success: false,
-              error: "Aluno já fez check-in hoje" + (checkinData.class_id ? " nesta turma" : "")
+              error: `${studentName} já fez check-in hoje` + (checkinData.class_id ? " nesta turma" : "")
             }),
             {
               status: 409,

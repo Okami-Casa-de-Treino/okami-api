@@ -91,6 +91,39 @@ export const createPaymentSchema = z.object({
   notes: z.string().optional(),
 });
 
+// Expense validation schemas
+export const createExpenseSchema = z.object({
+  title: z.string().min(2, "Título deve ter pelo menos 2 caracteres").max(255, "Título deve ter no máximo 255 caracteres"),
+  description: z.string().optional(),
+  amount: z.number().positive("Valor deve ser positivo"),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD"),
+  category: z.enum(["rent", "utilities", "insurance", "taxes", "loans", "credit_cards", "services", "supplies", "maintenance", "other"]).optional(),
+  creditor: z.string().max(255, "Credor deve ter no máximo 255 caracteres").optional(),
+  reference_number: z.string().max(100, "Número de referência deve ter no máximo 100 caracteres").optional(),
+  discount: z.number().min(0, "Desconto não pode ser negativo").nullable().optional(),
+  late_fee: z.union([z.number().min(0, "Multa não pode ser negativa"), z.null()]).optional(),
+  notes: z.string().optional(),
+  status: z.enum(["pending", "paid", "overdue", "cancelled", "partial"]).optional(),
+  payment_method: z.enum(["cash", "card", "pix", "bank_transfer"]).optional(),
+  payment_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
+});
+
+export const updateExpenseSchema = z.object({
+  title: z.string().min(2, "Título deve ter pelo menos 2 caracteres").max(255, "Título deve ter no máximo 255 caracteres").optional(),
+  description: z.string().optional(),
+  amount: z.number().positive("Valor deve ser positivo").optional(),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
+  payment_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
+  payment_method: z.enum(["cash", "card", "pix", "bank_transfer"]).optional(),
+  status: z.enum(["pending", "paid", "overdue", "cancelled", "partial"]).optional(),
+  category: z.enum(["rent", "utilities", "insurance", "taxes", "loans", "credit_cards", "services", "supplies", "maintenance", "other"]).optional(),
+  creditor: z.string().max(255, "Credor deve ter no máximo 255 caracteres").optional(),
+  reference_number: z.string().max(100, "Número de referência deve ter no máximo 100 caracteres").optional(),
+  discount: z.union([z.number().min(0, "Desconto não pode ser negativo"), z.null()]).optional(),
+  late_fee: z.union([z.number().min(0, "Multa não pode ser negativa"), z.null()]).optional(),
+  notes: z.string().optional(),
+});
+
 export const updatePaymentSchema = z.object({
   payment_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
   payment_method: z.enum(["cash", "card", "pix", "bank_transfer"]).optional(),
