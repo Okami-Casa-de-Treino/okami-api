@@ -11,8 +11,11 @@ RUN bun install
 # Copy source code
 COPY . .
 
+# Generate Prisma client
+RUN bunx prisma generate
+
 # Expose port
 EXPOSE 3000
 
 # Start the application
-CMD ["bun", "run", "src/index.ts"] 
+CMD ["bun", "run", "src/index.ts"]
