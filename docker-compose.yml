@@ -4,11 +4,7 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: okami-postgres
-    environment:
-      POSTGRES_DB: okami_gym
-      POSTGRES_USER: okami_user
-      POSTGRES_PASSWORD: okami_password
-      PGDATA: /var/lib/postgresql/data/pgdata
+    env_file: .env
     ports:
       - "5432:5432"
     volumes:
@@ -17,7 +13,7 @@ services:
     networks:
       - okami-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U okami_user -d okami_gym"]
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,19 +24,19 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: okami-api
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgres://okami_user:okami_password@postgres:5432/okami_gym
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
-      PORT: 3000
-      CORS_ORIGIN: http://localhost:5173
+    env_file: .env
+    labels:
+      - "traefik.http.routers.okamiapi.rule=Host(`okami-api.phmarques.com.br`)"
+      - "traefik.http.routers.okamiapi.entrypoints=web,websecure"
+      - "traefik.http.routers.okamiapi.tls.certresolver=myresolver"
+    networks:
+      - okami-network
+      - web
     ports:
       - "3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - okami-network
     volumes:
       - ./src:/app/src:ro
       - ./package.json:/app/package.json:ro
@@ -67,4 +63,6 @@ volumes:
 
 networks:
   okami-network:
-    driver: bridge 
+    driver: bridge
+  web:
+    external: true
