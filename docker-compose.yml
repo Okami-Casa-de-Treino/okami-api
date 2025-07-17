@@ -9,7 +9,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/01-init.sql
     networks:
       - okami-network
     healthcheck:
@@ -38,10 +38,10 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./src:/app/src:ro
-      - ./package.json:/app/package.json:ro
-      - ./tsconfig.json:/app/tsconfig.json:ro
-      - ./prisma:/app/prisma:ro
+      - ./src:/app/src
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./prisma:/app/prisma
       - ./uploads:/app/uploads
     command: sh -c "sleep 10 && bun run db:seed:users && bun --hot src/index.ts"
     restart: unless-stopped
