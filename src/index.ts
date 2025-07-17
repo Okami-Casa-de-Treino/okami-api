@@ -9,20 +9,20 @@ if (process.env.NODE_ENV !== 'production') {
 
 const PORT = process.env.PORT || 3000;
 
-// CORS headers
-const corsHeaders = {
-  "Access-Control-Allow-Origin": process.env.CORS_ORIGIN || "http://localhost:5173",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
-  "Access-Control-Max-Age": "86400",
-  "Access-Control-Allow-Credentials": "true",
-};
+// Parse allowed origins from env
+const allowedOrigins = (process.env.CORS_ORIGIN || "").split(",").map(o => o.trim());
 
-// Helper function to add CORS headers to response
-function addCORSHeaders(response: Response): Response {
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
+function addCORSHeaders(response: Response, request?: Request): Response {
+  const origin = request?.headers.get("Origin");
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set("Access-Control-Allow-Origin", origin);
+  } else {
+    response.headers.set("Access-Control-Allow-Origin", allowedOrigins[0] || "*");
+  }
+  response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+  response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+  response.headers.set("Access-Control-Max-Age", "86400");
+  response.headers.set("Access-Control-Allow-Credentials", "true");
   return response;
 }
 
@@ -39,10 +39,7 @@ const server = Bun.serve({
 
       // Handle CORS preflight
       if (request.method === "OPTIONS") {
-        return new Response(null, { 
-          status: 204, 
-          headers: corsHeaders 
-        });
+        return addCORSHeaders(new Response(null, { status: 204 }), request);
       }
 
       // Swagger Documentation Routes
@@ -84,7 +81,7 @@ const server = Bun.serve({
       // Try to handle with API router
       const routerResponse = await apiRouter.handle(request);
       if (routerResponse) {
-        return addCORSHeaders(routerResponse);
+        return addCORSHeaders(routerResponse, request);
       }
 
       // 404 for unmatched routes
@@ -97,7 +94,7 @@ const server = Bun.serve({
           status: 404, 
           headers: { "Content-Type": "application/json" } 
         }
-      ));
+      ), request);
 
     } catch (error) {
       console.error("Server error:", error);
@@ -110,7 +107,7 @@ const server = Bun.serve({
           status: 500, 
           headers: { "Content-Type": "application/json" } 
         }
-      ));
+      ), request);
     }
   },
 });
