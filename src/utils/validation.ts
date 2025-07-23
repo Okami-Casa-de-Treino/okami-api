@@ -7,7 +7,7 @@ export const createStudentSchema = z.object({
   cpf: z.string().regex(/^\d{11}$/, "CPF deve conter apenas 11 dígitos").optional(),
   rg: z.string().optional(),
   belt: z.string().optional(),
-  belt_degree: z.number().int().min(1).max(10).nullable().optional(),
+  belt_degree: z.number().int().min(0).max(10).nullable().optional(),
   address: z.string().optional(),
   phone: z.string().regex(/^\d{10,11}$/, "Telefone deve conter apenas dígitos (10 ou 11 dígitos)").optional(),
   email: z.string().email("Email inválido").optional(),
@@ -43,7 +43,7 @@ export const createTeacherSchema = z.object({
   phone: z.string().regex(/^\d{10,11}$/, "Telefone deve conter apenas dígitos (10 ou 11 dígitos)").optional(),
   email: z.string().email("Email inválido").optional(),
   belt: z.string().optional(),
-  belt_degree: z.number().int().min(1).max(10).nullable().optional(),
+  belt_degree: z.number().int().min(0).max(10).nullable().optional(),
   specialties: z.array(z.string()).optional(),
   hourly_rate: z.union([
     z.number().min(0, "Valor por hora não pode ser negativo"),
@@ -181,21 +181,24 @@ export function validateCPF(cpf: string | undefined): boolean {
   // Validate check digits
   let sum = 0;
   for (let i = 0; i < 9; i++) {
-    sum += parseInt(cleanCPF[i]) * (10 - i);
+    if (typeof cleanCPF[i] === 'undefined') return false;
+    sum += parseInt(cleanCPF[i]!) * (10 - i);
   }
   let digit1 = (sum * 10) % 11;
   if (digit1 === 10) digit1 = 0;
   
-  if (digit1 !== parseInt(cleanCPF[9])) return false;
+  if (typeof cleanCPF[9] === 'undefined' || digit1 !== parseInt(cleanCPF[9]!)) return false;
   
   sum = 0;
   for (let i = 0; i < 10; i++) {
-    sum += parseInt(cleanCPF[i]) * (11 - i);
+    if (typeof cleanCPF[i] === 'undefined') return false;
+    sum += parseInt(cleanCPF[i]!) * (11 - i);
   }
   let digit2 = (sum * 10) % 11;
   if (digit2 === 10) digit2 = 0;
   
-  return digit2 === parseInt(cleanCPF[10]);
+  if (typeof cleanCPF[10] === 'undefined') return false;
+  return digit2 === parseInt(cleanCPF[10]!);
 }
 
 export function formatCPF(cpf: string | undefined): string {
