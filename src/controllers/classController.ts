@@ -246,9 +246,9 @@ export class ClassController {
           );
         }
 
-        // Convert time strings to DateTime objects
-        const startTime = new Date(`1970-01-01T${classData.start_time}:00.000Z`);
-        const endTime = new Date(`1970-01-01T${classData.end_time}:00.000Z`);
+        // Store time strings directly - the database @db.Time(6) will handle them properly
+        const startTime = classData.start_time;
+        const endTime = classData.end_time;
 
         const newClass = await prisma.class.create({
           data: {
@@ -401,10 +401,10 @@ export class ClassController {
       }
       if (classData.days_of_week !== undefined) updateData.days_of_week = classData.days_of_week;
       if (classData.start_time !== undefined) {
-        updateData.start_time = new Date(`1970-01-01T${classData.start_time}:00.000Z`);
+        updateData.start_time = classData.start_time;
       }
       if (classData.end_time !== undefined) {
-        updateData.end_time = new Date(`1970-01-01T${classData.end_time}:00.000Z`);
+        updateData.end_time = classData.end_time;
       }
       if (classData.max_students !== undefined) updateData.max_students = classData.max_students;
       if (classData.belt_requirement !== undefined) updateData.belt_requirement = classData.belt_requirement;
