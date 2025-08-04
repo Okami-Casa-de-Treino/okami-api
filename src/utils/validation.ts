@@ -61,8 +61,8 @@ export const createClassSchema = z.object({
   days_of_week: z.array(z.number().int().min(0).max(6, "Dia da semana deve ser entre 0 (domingo) e 6 (sábado)"))
     .min(1, "Deve ter pelo menos um dia da semana")
     .refine(days => [...new Set(days)].length === days.length, "Não pode haver dias duplicados"),
-  start_time: z.string().regex(/^\d{2}:\d{2}$/, "Horário deve estar no formato HH:MM"),
-  end_time: z.string().regex(/^\d{2}:\d{2}$/, "Horário deve estar no formato HH:MM"),
+  start_time: z.string().datetime("Deve ser um datetime ISO válido com timezone"),
+  end_time: z.string().datetime("Deve ser um datetime ISO válido com timezone"),
   max_students: z.union([
     z.number().int().positive("Número máximo de alunos deve ser positivo"),
     z.null()

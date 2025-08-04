@@ -246,9 +246,13 @@ export class ClassController {
           );
         }
 
-        // Store time strings directly - the database @db.Time(6) will handle them properly
-        const startTime = classData.start_time;
-        const endTime = classData.end_time;
+        // Parse DateTime with timezone and extract local time
+        const startDateTime = new Date(classData.start_time);
+        const endDateTime = new Date(classData.end_time);
+        
+        // Convert to Brazil timezone (UTC-3) and extract time
+        const startTime = new Date(startDateTime.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+        const endTime = new Date(endDateTime.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
 
         const newClass = await prisma.class.create({
           data: {
@@ -401,10 +405,12 @@ export class ClassController {
       }
       if (classData.days_of_week !== undefined) updateData.days_of_week = classData.days_of_week;
       if (classData.start_time !== undefined) {
-        updateData.start_time = classData.start_time;
+        const startDateTime = new Date(classData.start_time);
+        updateData.start_time = new Date(startDateTime.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
       }
       if (classData.end_time !== undefined) {
-        updateData.end_time = classData.end_time;
+        const endDateTime = new Date(classData.end_time);
+        updateData.end_time = new Date(endDateTime.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
       }
       if (classData.max_students !== undefined) updateData.max_students = classData.max_students;
       if (classData.belt_requirement !== undefined) updateData.belt_requirement = classData.belt_requirement;
