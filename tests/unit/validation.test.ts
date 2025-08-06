@@ -112,6 +112,21 @@ describe("Unit: Validation Schemas", () => {
       expect(result.success).toBe(true);
     });
 
+    it("should accept student without email", () => {
+      const studentData = {
+        full_name: "João Silva",
+        birth_date: "1990-01-15",
+        phone: "11999999999"
+        // email is intentionally omitted
+      };
+
+      const result = createStudentSchema.safeParse(studentData);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.email).toBeUndefined();
+      }
+    });
+
     it("should accept student with monthly_fee as null", () => {
       const validData = {
         full_name: "João Silva",

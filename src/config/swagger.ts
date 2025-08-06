@@ -127,7 +127,7 @@ const swaggerDefinition = {
           belt_degree: { type: 'integer', example: 1 },
           address: { type: 'string', example: 'Rua das Flores, 123' },
           phone: { type: 'string', example: '(11) 99999-9999' },
-          email: { type: 'string', format: 'email', example: 'joao@email.com' },
+          email: { type: 'string', format: 'email', example: 'joao@email.com', description: 'Optional but must be unique if provided' },
           emergency_contact_name: { type: 'string', example: 'Maria Silva' },
           emergency_contact_phone: { type: 'string', example: '(11) 88888-8888' },
           emergency_contact_relationship: { type: 'string', example: 'Mãe' },

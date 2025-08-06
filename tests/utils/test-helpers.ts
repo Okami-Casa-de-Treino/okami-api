@@ -123,7 +123,7 @@ export class TestHelpers {
       birth_date: "1990-01-15",
       cpf: `${Math.floor(Math.random() * 900 + 100)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`,
       phone: `11${timestamp.toString().slice(-8)}`,
-      email: `test.student.${timestamp}.${random}@test.com`,
+      // email is now optional - only include if explicitly provided in overrides
       emergency_contact_name: "Emergency Contact",
       emergency_contact_phone: "11888888888",
       emergency_contact_relationship: "Parent",

@@ -81,7 +81,24 @@ describe("API: Students", () => {
       expect(data.message).toBe("Aluno criado com sucesso");
     });
 
-    it("should reject duplicate email", async () => {
+    it("should allow students without email", async () => {
+      const studentData = TestHelpers.generateStudentData({
+        phone: "11999999991"
+        // email is intentionally omitted
+      });
+
+      const response = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData)
+      }, "admin");
+      
+      expect(response.status).toBe(201);
+      const data = await response.json() as any;
+      expect(data.success).toBe(true);
+      expect(data.data.email).toBeNull();
+    });
+
+    it("should reject duplicate email when provided", async () => {
       const studentData1 = TestHelpers.generateStudentData({
         email: "duplicate@test.com",
         phone: "11999999991"
@@ -99,7 +116,7 @@ describe("API: Students", () => {
       }, "admin");
       expect(response1.status).toBe(201);
 
-      // Try to create second student with same email
+      // Try to create second student with same email (should fail)
       const response2 = await TestHelpers.makeAuthenticatedRequest("/api/students", {
         method: "POST",
         body: JSON.stringify(studentData2)
@@ -191,6 +208,38 @@ describe("API: Students", () => {
       expect(data.data.full_name).toBe(studentData.full_name);
       expect(data.data.monthly_fee).toBeNull(); // Should be null when not provided
       expect(data.message).toBe("Aluno criado com sucesso");
+    });
+
+    it("should allow multiple students without email", async () => {
+      const studentData1 = TestHelpers.generateStudentData({
+        phone: "11999999997"
+        // email is intentionally omitted
+      });
+      const studentData2 = TestHelpers.generateStudentData({
+        phone: "11999999998"
+        // email is intentionally omitted
+      });
+
+      // Create first student without email
+      const response1 = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData1)
+      }, "admin");
+      expect(response1.status).toBe(201);
+
+      // Create second student without email (should succeed)
+      const response2 = await TestHelpers.makeAuthenticatedRequest("/api/students", {
+        method: "POST",
+        body: JSON.stringify(studentData2)
+      }, "admin");
+      expect(response2.status).toBe(201);
+      
+      const data1 = await response1.json() as any;
+      const data2 = await response2.json() as any;
+      expect(data1.success).toBe(true);
+      expect(data2.success).toBe(true);
+      expect(data1.data.email).toBeNull();
+      expect(data2.data.email).toBeNull();
     });
   });
 
