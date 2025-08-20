@@ -315,6 +315,10 @@ export class PaymentController {
       // Build update data
       const updateData: Prisma.PaymentUpdateInput = {};
       
+      if (paymentData.student_id !== undefined) updateData.student_id = paymentData.student_id;
+      if (paymentData.amount !== undefined) updateData.amount = paymentData.amount;
+      if (paymentData.due_date !== undefined) updateData.due_date = new Date(paymentData.due_date);
+      if (paymentData.reference_month !== undefined) updateData.reference_month = new Date(paymentData.reference_month);
       if (paymentData.payment_date !== undefined) updateData.payment_date = paymentData.payment_date ? new Date(paymentData.payment_date) : null;
       if (paymentData.payment_method !== undefined) updateData.payment_method = paymentData.payment_method as any;
       if (paymentData.status !== undefined) updateData.status = paymentData.status;

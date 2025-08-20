@@ -357,6 +357,13 @@ export class StudentController {
       if (studentData.emergency_contact_relationship !== undefined) updateData.emergency_contact_relationship = studentData.emergency_contact_relationship;
       if (studentData.medical_observations !== undefined) updateData.medical_observations = studentData.medical_observations;
       if (studentData.monthly_fee !== undefined) updateData.monthly_fee = studentData.monthly_fee;
+      if (studentData.status !== undefined) updateData.status = studentData.status as any;
+      
+      // Hash password if provided
+      if (studentData.password !== undefined) {
+        const saltRounds = 12;
+        updateData.password_hash = await bcrypt.hash(studentData.password, saltRounds);
+      }
 
       if (Object.keys(updateData).length === 0) {
         return new Response(
@@ -370,7 +377,7 @@ export class StudentController {
           }
         );
       }
-
+      
       try {
         const updatedStudent = await prisma.student.update({
           where: { id },
@@ -479,14 +486,19 @@ export class StudentController {
         );
       }
 
+      // Get delete type from query parameter
+      const url = new URL(request.url);
+      const deleteType = url.searchParams.get('type') || 'auto'; // 'soft', 'hard', or 'auto'
+
       try {
-        // Check if student exists and has related records
+        // Check if student exists
         const student = await prisma.student.findUnique({
           where: { id },
           include: {
             payments: { take: 1 },
             checkins: { take: 1 },
-            student_classes: { take: 1 }
+            student_classes: { take: 1 },
+            belt_promotions: { take: 1 }
           }
         });
 
@@ -507,9 +519,10 @@ export class StudentController {
         const hasRelatedRecords = 
           student.payments.length > 0 || 
           student.checkins.length > 0 || 
-          student.student_classes.length > 0;
+          student.student_classes.length > 0 ||
+          student.belt_promotions.length > 0;
 
-        if (hasRelatedRecords) {
+        if (deleteType === 'soft' || (deleteType === 'auto' && hasRelatedRecords)) {
           // Soft delete by setting status to inactive
           await prisma.student.update({
             where: { id },
@@ -519,7 +532,52 @@ export class StudentController {
           return new Response(
             JSON.stringify({
               success: true,
-              message: "Aluno desativado com sucesso (possui registros relacionados)"
+              message: hasRelatedRecords 
+                ? "Aluno desativado com sucesso (possui registros relacionados)" 
+                : "Aluno desativado com sucesso",
+              deleteType: 'soft'
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" }
+            }
+          );
+        } else if (deleteType === 'hard') {
+          // Hard delete - cascade delete all related records
+          await prisma.$transaction(async (tx) => {
+            // Delete in correct order to respect foreign key constraints
+            
+            // Delete belt promotions
+            await tx.beltPromotion.deleteMany({
+              where: { student_id: id }
+            });
+            
+            // Delete checkins
+            await tx.checkin.deleteMany({
+              where: { student_id: id }
+            });
+            
+            // Delete payments
+            await tx.payment.deleteMany({
+              where: { student_id: id }
+            });
+            
+            // Delete student class enrollments
+            await tx.studentClass.deleteMany({
+              where: { student_id: id }
+            });
+            
+            // Finally, delete the student
+            await tx.student.delete({
+              where: { id }
+            });
+          });
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              message: "Aluno e todos os registros relacionados foram removidos permanentemente",
+              deleteType: 'hard'
             }),
             {
               status: 200,
@@ -527,21 +585,43 @@ export class StudentController {
             }
           );
         } else {
-          // Hard delete if no related records
-          await prisma.student.delete({
-            where: { id }
-          });
+          // Auto mode - decide based on related records (legacy behavior)
+          if (hasRelatedRecords) {
+            // Soft delete
+            await prisma.student.update({
+              where: { id },
+              data: { status: 'inactive' }
+            });
 
-          return new Response(
-            JSON.stringify({
-              success: true,
-              message: "Aluno removido com sucesso"
-            }),
-            {
-              status: 200,
-              headers: { "Content-Type": "application/json" }
-            }
-          );
+            return new Response(
+              JSON.stringify({
+                success: true,
+                message: "Aluno desativado com sucesso (possui registros relacionados)",
+                deleteType: 'soft'
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" }
+              }
+            );
+          } else {
+            // Hard delete
+            await prisma.student.delete({
+              where: { id }
+            });
+
+            return new Response(
+              JSON.stringify({
+                success: true,
+                message: "Aluno removido com sucesso",
+                deleteType: 'hard'
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" }
+              }
+            );
+          }
         }
 
       } catch (error: any) {

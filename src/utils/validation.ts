@@ -10,7 +10,7 @@ export const createStudentSchema = z.object({
   belt_degree: z.number().int().min(0).max(10).nullable().optional(),
   address: z.string().optional(),
   phone: z.string().regex(/^\d{10,11}$/, "Telefone deve conter apenas dígitos (10 ou 11 dígitos)").optional(),
-  email: z.string().email("Email inválido").optional(),
+  email: z.string().email("Email inválido").transform(val => val === "" ? undefined : val).optional(),
   emergency_contact_name: z.string().optional(),
   emergency_contact_phone: z.string().optional(),
   emergency_contact_relationship: z.string().optional(),
@@ -19,6 +19,7 @@ export const createStudentSchema = z.object({
     z.number().min(0, "Mensalidade não pode ser negativa"),
     z.null()
   ]).optional(),
+  status: z.enum(["active", "inactive", "suspended"]).optional(),
   // Authentication field (optional)
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").optional(),
 });
@@ -125,12 +126,16 @@ export const updateExpenseSchema = z.object({
 });
 
 export const updatePaymentSchema = z.object({
-  payment_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
-  payment_method: z.enum(["cash", "card", "pix", "bank_transfer"]).optional(),
+  student_id: z.string().uuid("ID do aluno deve ser um UUID válido").optional(),
+  amount: z.number().positive("Valor deve ser positivo").optional(),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").optional(),
+  reference_month: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Mês de referência deve estar no formato YYYY-MM-DD").optional(),
+  payment_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD").nullable().optional(),
+  payment_method: z.enum(["cash", "card", "pix", "bank_transfer"]).nullable().optional(),
   status: z.enum(["pending", "paid", "overdue", "cancelled"]).optional(),
   discount: z.number().min(0, "Desconto não pode ser negativo").nullable().optional(),
   late_fee: z.number().min(0, "Multa não pode ser negativa").nullable().optional(),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 // Auth validation schemas
